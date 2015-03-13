@@ -1,62 +1,42 @@
 <div id="comments" class="tab">
-  <?php foreach($comments as $comment): ?>
-  <div class="comment_container">
-     <a class="commentlink" name="comment<?php echo Filters::noXSS($comment['comment_id']); ?>" id="comment<?php echo Filters::noXSS($comment['comment_id']); ?>"
-        href="<?php echo Filters::noXSS(CreateURL('details', $task_details['task_id'])); ?>#comment<?php echo Filters::noXSS($comment['comment_id']); ?>">
-        <!--<img src="<?php echo Filters::noXSS($this->get_image('comment')); ?>"-->
-        <!--  title="<?php echo Filters::noXSS(L('commentlink')); ?>" alt="" />-->
-      </a>
-      <!--<?php echo Filters::noXSS(L('commentby')); ?>--> <?php echo tpl_userlink($comment['user_id']); ?> <br />
-      <br />
-      <?php if($fs->prefs['enable_avatars'] == 1) { ?>
-         <?php echo tpl_userlinkavatar($comment['user_id'], $fs->prefs['max_avatar_size'], 'av_comment'); ?>
-        <?php } ?>
-          <?php echo Filters::noXSS(formatDate($comment['date_added'], true)); ?>
-      <span class="DoNotPrint">
-        <?php if ($user->perms('edit_comments') || ($user->perms('edit_own_comments') && $comment['user_id'] == $user->id)): ?>
-        <!--&mdash;-->
-        <br>
-        <a class="button" href="<?php echo Filters::noXSS($_SERVER['SCRIPT_NAME']); ?>?do=editcomment&amp;task_id=<?php echo Filters::noXSS($task_details['task_id']); ?>&amp;id=<?php echo Filters::noXSS($comment['comment_id']); ?>">
-          <?php echo Filters::noXSS(L('edit')); ?></a>
-        <?php endif; ?>
+<?php foreach($comments as $comment): ?>
+<div class="comment_container"><a class="commentlink" name="comment<?php echo Filters::noXSS($comment['comment_id']); ?>" id="comment<?php echo Filters::noXSS($comment['comment_id']); ?>"></a>
+<?php if($fs->prefs['enable_avatars'] == 1) : ?><?php echo tpl_userlinkavatar($comment['user_id'], $fs->prefs['max_avatar_size'], 'av_comment'); ?>
+<?php else: ?><?php echo tpl_userlink($comment['user_id']); ?>
+<?php endif; ?>
+<div class="date"></span><?php echo Filters::noXSS(formatDate($comment['date_added'], true)); ?></div>
+<div class="DoNotPrint">
+<?php if ($user->perms('edit_comments') || ($user->perms('edit_own_comments') && $comment['user_id'] == $user->id)): ?>
+<a class="button fa fa-pencil" href="<?php echo Filters::noXSS($_SERVER['SCRIPT_NAME']); ?>?do=editcomment&amp;task_id=<?php echo Filters::noXSS($task_details['task_id']); ?>&amp;id=<?php echo Filters::noXSS($comment['comment_id']); ?>"
+ title="<?php echo Filters::noXSS(L('edit')); ?>">&nbsp;</a><?php endif; ?>
+<?php if ($user->perms('delete_comments')): ?>
+<?php echo tpl_form(CreateUrl('details', $task_details['task_id']),null,null,null,'class="delcomment"'); ?>
+<input type="hidden" name="action" value="details.deletecomment">
+<input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
+<?php $confirm = (isset($comment_attachments[$comment['comment_id']])) ? sprintf(L('confirmdeletecomment'), L('attachementswilldeleted')) : sprintf(L('confirmdeletecomment'), '')  ?>
+<button class="fa fa-trash" type="submit" onclick="return confirm('<?php echo Filters::noJsXSS($confirm); ?>');"><?php echo Filters::noXSS(L('delete')); ?></button>
+</form><?php endif; ?></div>
+<div class="comment">
+<?php if(isset($comment_changes[$comment['date_added']])): ?>
+<ul class="comment_changes">
+<?php foreach($comment_changes[$comment['date_added']] as $change): ?><li><?php echo event_description($change); ?></li><?php endforeach; ?>
+</ul>
+<?php endif; ?>
+<div class="commenttext"><?php echo TextFormatter::render($comment['comment_text'], 'comm', $comment['comment_id'], $comment['content']); ?></div>
+<?php
+if (isset($comment_attachments[$comment['comment_id']])) {
+  $this->display('common.attachments.tpl', 'attachments', $comment_attachments[$comment['comment_id']]);
+}
+if (isset($comment_links[$comment['comment_id']])) {
+  $this->display('common.links.tpl', 'links', $comment_links[$comment['comment_id']]);
+}
+?></div>
+<div class="clear"></div>
+</div>
+<?php endforeach; ?>
 
-        <?php if ($user->perms('delete_comments')): ?>
-        <?php echo tpl_form(CreateUrl('details', $task_details['task_id'])); ?>
-        <input type="hidden" name="action" value="details.deletecomment">
-        <input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
-        <?php $confirm = (isset($comment_attachments[$comment['comment_id']])) ? sprintf(L('confirmdeletecomment'), L('attachementswilldeleted')) : sprintf(L('confirmdeletecomment'), '')  ?>
-        <button type="submit" onclick="return confirm('<?php echo Filters::noJsXSS($confirm); ?>');"><?php echo Filters::noXSS(L('delete')); ?></button>
-        </form>
-        <?php endif ?>
-      </span>
-    <div class="comment">
-    <?php if(isset($comment_changes[$comment['date_added']])): ?>
-    <ul class="comment_changes">
-    <?php foreach($comment_changes[$comment['date_added']] as $change): ?>
-      <li><?php echo event_description($change); ?></li>
-    <?php endforeach; ?>
-    </ul>
-    <?php endif; ?>
-    <div class="commenttext">
-      <?php echo TextFormatter::render($comment['comment_text'], 'comm', $comment['comment_id'], $comment['content']); ?></div>
-      <?php if (isset($comment_attachments[$comment['comment_id']])) {
-                $this->display('common.attachments.tpl', 'attachments', $comment_attachments[$comment['comment_id']]);
-            }
-      ?>
-      <?php if (isset($comment_links[$comment['comment_id']])) {
-                $this->display('common.links.tpl', 'links', $comment_links[$comment['comment_id']]);
-            }
-      ?>
-    </div>
-
-
-    <div class="clear"></div>
-  </div>
-
-  <?php endforeach; ?>
-
-  <?php if ($user->perms('add_comments') && (!$task_details['is_closed'] || $proj->prefs['comment_closed'])): ?>
-  <h4><?php echo Filters::noXSS(L('addcomment')); ?></h4>
+<?php if ($user->perms('add_comments') && (!$task_details['is_closed'] || $proj->prefs['comment_closed'])): ?>
+<h4><?php echo Filters::noXSS(L('addcomment')); ?></h4>
   <?php echo tpl_form(CreateUrl('details', $task_details['task_id']), 'comment', 'post', 'multipart/form-data'); ?>
     <div>
       <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
