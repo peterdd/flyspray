@@ -664,6 +664,7 @@ div.tab {margin: 10px 1ex 10px 0;padding: 1ex 1ex 0;}
 .comment_container .comment {margin-left: 235px;}
 .comment_container .date {position:absolute;top:0;font-size:small;left:100px;}
 .comment_container .DoNotPrint{position:absolute;right:0;top:0;}
+.delcomment{display:inline-block;}
 .comment_container .attachments {
   margin: 10px 0px 10px 0px;
   padding: 10px;
