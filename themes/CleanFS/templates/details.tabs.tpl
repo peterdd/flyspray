@@ -11,7 +11,7 @@ if ($user->perms('view_history')):
 ?><li id="historytab"><a id="historytaba" onmousedown="getHistory('<?php echo Filters::noXSS($task_details['task_id']); ?>', '<?php echo Filters::noJsXSS($baseurl); ?>', 'history', '<?php echo Filters::noXSS(Get::num('details')); ?>');"
  href="<?php echo Filters::noXSS(CreateURL('details', $task_details['task_id'], null)); ?>#history"><?php echo Filters::noXSS(L('history')); ?></a></li><?php
 endif; 
-if ($proj->prefs['use_effort_tracking'] && ($user->perms('view_current_effort_done')):
+if ($proj->prefs['use_effort_tracking'] && ($user->perms('view_current_effort_done'))):
 ?><li id="efforttab"><a href="#effort"><?php echo Filters::noXSS(L('efforttracking')); ?></a></li><?php
 endif;
 ?></ul>
