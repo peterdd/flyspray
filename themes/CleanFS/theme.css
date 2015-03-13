@@ -627,14 +627,12 @@ form #taskdetails #taskdetailsfull {
 .userlist tr:nth-child(2n-1) td {background-color: #f1f1f1;}
 #related .related {float: left;margin-right: 0;}
 #duplicate_tasks th{height: 30px;}
-#submenu {margin-bottom: 0;height: 25px;}
+#submenu {margin-bottom: 0;}
 #submenu a {
+  display:inline-block;
   border: 1px solid #d4d4d4;
   background: #e5e5e5;
   color: #3c4041;
-  display: block;
-  float: left;
-  height: 21px;
   margin: 4px 0 0 2px;
   padding: 7px 10px 1px 10px;
   border-top-left-radius: 5px;
@@ -646,7 +644,6 @@ form #taskdetails #taskdetailsfull {
 }
 #submenu a:hover {background-color: #d6d8d9;}
 #submenu a.active {
-  height: 26px;
   margin-top: 0;
   font-weight: bold;
   border-bottom: 1px solid white;
