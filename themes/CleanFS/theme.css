@@ -659,14 +659,12 @@ form #taskdetails #taskdetailsfull {
 #submenu li {display: inline;}
 div.tab {margin: 10px 1ex 10px 0;padding: 1ex 1ex 0;}
 * html .tab div.clear {clear: none;height: 14em;}
-div.comment_container {
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid #e1e1e1;
-}
-div.comment_container .commenttext p{margin: .5em 0 .5em 0;padding: 0;}
-div.comment_container .comment {margin-left: 235px;}
-div.comment_container .attachments {
+.comment_container { margin-bottom: 5px;position:relative;}
+.comment_container .commenttext p{margin: .5em 0 .5em 0;padding: 0;}
+.comment_container .comment {margin-left: 235px;}
+.comment_container .date {position:absolute;top:0;font-size:small;left:100px;}
+.comment_container .DoNotPrint{position:absolute;right:0;top:0;}
+.comment_container .attachments {
   margin: 10px 0px 10px 0px;
   padding: 10px;
   background: white;
