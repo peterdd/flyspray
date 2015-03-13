@@ -334,7 +334,7 @@ function quick_edit(elem, id)
     <ul class="fieldslist">
         <!-- Task Type-->
         <?php if (in_array('tasktype', $fields)): ?>
-        <li><span class="label"><?php echo Filters::noXSS(L('tasktype')); ?></span><span class="value<?php if ($user->can_edit_task($task_details)): ?> canedit<?php endif;?>"></span><?php echo Filters::noXSS($task_details['tasktype_name']); ?></span>
+        <li><span class="label"><?php echo Filters::noXSS(L('tasktype')); ?></span><span class="value<?php if ($user->can_edit_task($task_details)): ?> canedit<?php endif;?>"><?php echo Filters::noXSS($task_details['tasktype_name']); ?></span>
 	<?php if ($user->can_edit_task($task_details)):
 	?><span class="editquick" style="display:none;">
 		<span class="editvalue"><select id="tasktype" name="task_type">
