@@ -14,7 +14,7 @@
 <input type="hidden" name="action" value="details.deletecomment">
 <input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
 <?php $confirm = (isset($comment_attachments[$comment['comment_id']])) ? sprintf(L('confirmdeletecomment'), L('attachementswilldeleted')) : sprintf(L('confirmdeletecomment'), '')  ?>
-<button class="button fa fa-remove" type="submit" onclick="return confirm('<?php echo Filters::noJsXSS($confirm); ?>');"><?php echo Filters::noXSS(L('delete')); ?></button>
+<button class="button fa fa-times" type="submit" onclick="return confirm('<?php echo Filters::noJsXSS($confirm); ?>');" title="<?php echo Filters::noXSS(L('delete')); ?>"></button>
 </form><?php endif; ?></div>
 <div class="comment">
 <?php if(isset($comment_changes[$comment['date_added']])): ?>
