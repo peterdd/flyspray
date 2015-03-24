@@ -1505,12 +1505,12 @@ abstract class Backend
         $having = (count($having)) ? 'HAVING '. join(' AND ', $having) : '';
 
         // echo "<pre>$offset : $perpage</pre>";
-        $sql = $db->Query("SELECT  COUNT(*)
+        $sql = $db->Query("SELECT  COUNT(*) FROM (SELECT  COUNT(*)
                           FROM     $from
                           $where
                           GROUP BY $groupby
-                          $having", $sql_params);
-        $totalcount = $db->CountRows($sql);
+                          $having) s", $sql_params);
+        $totalcount = $db->FetchOne($sql);
 
         # 20150313 peterdd: Do not override task_type with tasktype_name until we changed t.task_type to t.task_type_id! We need the id too.
         $sql = $db->Query("
