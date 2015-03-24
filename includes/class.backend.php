@@ -1214,8 +1214,7 @@ abstract class Backend
      * @param array $args
      * @param array $visible
      * @param integer $offset
-     * @param integer $comment
-     * @param bool $perpage
+     * @param integer $perpage
      * @access public
      * @return array
      * @version 1.0
@@ -1505,6 +1504,14 @@ abstract class Backend
 
         $having = (count($having)) ? 'HAVING '. join(' AND ', $having) : '';
 
+        // echo "<pre>$offset : $perpage</pre>";
+        $sql = $db->Query("SELECT  COUNT(*)
+                          FROM     $from
+                          $where
+                          GROUP BY $groupby
+                          $having", $sql_params);
+        $totalcount = $db->CountRows($sql);
+
         # 20150313 peterdd: Do not override task_type with tasktype_name until we changed t.task_type to t.task_type_id! We need the id too.
         $sql = $db->Query("
                           SELECT   t.*, $select
@@ -1516,26 +1523,31 @@ abstract class Backend
                           $where
                           GROUP BY $groupby
                           $having
-                          ORDER BY $sortorder", $sql_params);
+                          ORDER BY $sortorder", $sql_params, $perpage, $offset);
 
         $tasks = $db->fetchAllArray($sql);
         $id_list = array();
         $limit = array_get($args, 'limit', -1);
-        $task_count = 0;
+        // $task_count = 0;
+        $forbidden_tasks_count = 0;
         foreach ($tasks as $key => $task) {
             $id_list[] = $task['task_id'];
             if (!$user->can_view_task($task)) {
                 unset($tasks[$key]);
-                array_pop($id_list);
-                --$task_count;
+                $forbidden_tasks_count++;
+				/*
+				array_pop($id_list);
+				 * 
+				
             } elseif (!is_null($perpage) && ($task_count < $offset || ($task_count > $offset - 1 + $perpage) || ($limit > 0 && $task_count >= $limit))) {
                 unset($tasks[$key]);
+				 */
             }
 
-            ++$task_count;
+            // ++$task_count;
         }
 
-        return array($tasks, $id_list);
+        return array($tasks, $id_list, $totalcount, $forbidden_tasks_count);
     }
 
 }

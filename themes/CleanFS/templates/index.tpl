@@ -268,7 +268,7 @@
         </th>
         <?php if (!$user->isAnon()): ?>
         <th class="ttcolumn">
-            <?php if (!$user->isAnon() && $total): ?>
+            <?php if (!$user->isAnon() && $totalcount): ?>
             <a title="<?php echo Filters::noXSS(L('toggleselected')); ?>" href="javascript:ToggleSelected('massops')" onclick="massSelectBulkEditCheck();">
             </a>
             <?php endif; ?>
@@ -351,15 +351,15 @@
 </table>
 <table id="pagenumbers">
     <tr>
-        <?php if ($total): ?>
+        <?php if ($totalcount): ?>
         <td id="taskrange">
             <?php echo sprintf(L('taskrange'), $offset + 1,
-            ($offset + $perpage > $total ? $total : $offset + $perpage), $total); ?>
+            ($offset + $perpage > $totalcount ? $totalcount : $offset + $perpage), $totalcount); ?>
 
-            <?php if (!$proj->id == 0 && !$user->isAnon() && $total){ ?>
+            <?php if (!$proj->id == 0 && !$user->isAnon() && $totalcount){ ?>
             <?php } ?>
         </td>
-        <td id="numbers"><?php echo pagenums($pagenum, $perpage, $total); ?></td>
+        <td id="numbers"><?php echo pagenums($pagenum, $perpage, $totalcount); ?></td>
         <?php else: ?>
         <td id="taskrange"><strong><?php echo Filters::noXSS(L('noresults')); ?></strong></td>
         <?php endif; ?>
@@ -368,7 +368,7 @@
 
 <!--- Bulk editing Tasks --->
 <?php if (!$proj->id == 0): ?>
-<?php if (!$user->isAnon() && $total): ?>
+<?php if (!$user->isAnon() && $totalcount): ?>
 <!-- Grab fields wanted for this project so we only show those specified in the settings -->
 <script>Effect.Fade('bulk_edit_selectedItems');</script>
 <div id="bulk_edit_selectedItems" style="display:none">

@@ -43,7 +43,7 @@ if (in_array('effort', $visible) && !$user->perms('view_current_effort_done')) {
     unset($visible[array_search('effort', $visible)]);
 }
 
-list($tasks, $id_list) = Backend::get_task_list($_GET, $visible, $offset, $perpage);
+list($tasks, $id_list, $totalcount, $forbiddencount) = Backend::get_task_list($_GET, $visible, $offset, $perpage);
 
 //-- Added 2/1/2014 LAE. See if user wants to export the task list
 if (Get::has('export_list')) {
@@ -55,6 +55,8 @@ $page->uses('tasks', 'offset', 'perpage', 'pagenum', 'visible');
 // List of task IDs for next/previous links
 $_SESSION['tasklist'] = $id_list;
 $page->assign('total', count($id_list));
+$page->assign('totalcount', $totalcount);
+$page->assign('forbiddencount', $forbiddencount);
 
 // Send user variables to the template
 
