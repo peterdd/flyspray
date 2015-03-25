@@ -1504,6 +1504,16 @@ LEFT JOIN {notifications} fsn ON t.task_id = fsn.task_id';
             $sql_params[] = $user->id;
         }
 
+		// Finally, add view permissions checking to the query
+		// for everyone who is not an admin.
+		if (!$user->perms('is_admin')) {
+			if ($user->isAnon()) {
+				$where[] = 'p.others_view = 1';
+				$where[] = 't.mark_private = 0';
+			}
+			
+		}
+		
         $where = (count($where)) ? 'WHERE '. join(' AND ', $where) : '';
 
         // Get the column names of table tasks for the group by statement
@@ -1516,7 +1526,6 @@ LEFT JOIN {notifications} fsn ON t.task_id = fsn.task_id';
 
         $having = (count($having)) ? 'HAVING '. join(' AND ', $having) : '';
 
-        // echo "<pre>$offset : $perpage</pre>";
         $sql = $db->Query("SELECT  COUNT(*) FROM (SELECT  COUNT(*)
                           FROM     $from
                           $where
@@ -1535,7 +1544,8 @@ $where
 GROUP BY $groupby
 $having
 ORDER BY $sortorder";
-	#echo '<pre>'.$sqltext.'</pre>'; # for debugging 
+    // echo "<pre>$offset : $perpage : $totalcount</pre>";
+	// echo '<pre>'.$sqltext.'</pre>'; # for debugging 
         $sql = $db->Query($sqltext, $sql_params, $perpage, $offset);
 
         $tasks = $db->fetchAllArray($sql);
