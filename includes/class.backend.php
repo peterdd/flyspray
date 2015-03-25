@@ -1307,6 +1307,8 @@ LEFT JOIN  {attachments} att ON t.task_id = att.task_id ';
 LEFT JOIN  {effort} ef ON t.task_id = ef.task_id ';
 		$select .= ' SUM( ef.effort) AS effort, ';
 	}
+	
+    // Add also groups and users_in_groups for view permission checks.
 
         $from   .= '
 LEFT JOIN  {assigned} ass ON t.task_id = ass.task_id ';
@@ -1317,6 +1319,33 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
             $select .= ' COUNT(DISTINCT ass.user_id)    AS num_assigned, ';
         }
 
+    // Add also groups and users_in_groups for view permission checks.
+    // Need both global and project groups. What to do if global says
+    // yes and project specific no, or the opposite? In this implementation,
+    // global wins.
+		if (!$user->isAnon() && !$user->perms('is_admin')) {
+        $from   .= '
+JOIN {groups} gpg ON gpg.project_id = 0 ';
+			if ($user->perms('manage_project', 0)
+					|| $user->perms('view_tasks', 0)
+					|| $user->perms('view_tasks', 0)
+					|| $user->perms('view_tasks', 0)) {
+				
+        $from   .= '
+LEFT JOIN {groups} pg ON pg.project_id = p.project_id ';
+        $from   .= '
+LEFT JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
+	}
+	else {
+		// There need to exist a project group for current user.
+        $from   .= '
+JOIN {groups} pg ON pg.project_id = p.project_id ';
+        $from   .= '
+JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
+	}
+	$sql_params[]  = $user->id;
+		}
+		
         if (array_get($args, 'only_primary')) {
             $from   .= '
 LEFT JOIN  {dependencies} dep ON dep.dep_task_id = t.task_id ';
@@ -1511,7 +1540,12 @@ LEFT JOIN {notifications} fsn ON t.task_id = fsn.task_id';
 				$where[] = 'p.others_view = 1';
 				$where[] = 't.mark_private = 0';
 			}
-			
+			if (!$user->isAnon()) {
+				// No use trying to check other permissions from $user,
+				// they can be different from project to project and
+				// we can also be viewing "All projects", everything
+				// must be done with SQL.
+			}
 		}
 		
         $where = (count($where)) ? 'WHERE '. join(' AND ', $where) : '';
