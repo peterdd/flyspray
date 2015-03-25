@@ -1323,7 +1323,7 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
     // Need both global and project groups. What to do if global says
     // yes and project specific no, or the opposite? In this implementation
     // project specific permissions win, if there exists such.
-    if (!$user->isAnon() && !$user->perms('is_admin')) {
+    if (!$user->isAnon()) {
         // Global group exists always
         $from   .= '
 JOIN {groups} gpg
