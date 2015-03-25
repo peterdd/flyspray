@@ -1339,12 +1339,12 @@ ON pg.project_id = t.project_id ';
 	}
 		
     if (!$user->isAnon()) { 
-        $where[] = 'COALESCE(pg.view_tasks, gpg.view_tasks) = 1';
+        $where[] = '(pg.view_tasks = 1 OR gpg.view_tasks = 1)';
     }
         // Handle private tasks next
 		if (!$user->isAnon() && !$user->perms('is_admin')) {
             $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? 
-OR COALESCE(pg.is_admin, gpg.is_admin) = 1 OR COALESCE(pg.manage_project, gpg.manage_project) = 1)))';
+OR (pg.is_admin = 1 OR gpg.is_admin = 1) OR (pg.manage_project = 1 OR gpg.manage_project = 1))))';
             $sql_params[]  = $user->id;
             $sql_params[]  = $user->id;
         }
@@ -1572,8 +1572,8 @@ $where
 GROUP BY $groupby
 $having
 ORDER BY $sortorder";
-    // echo "<pre>$offset : $perpage : $totalcount</pre>";
-	// echo '<pre>'.$sqltext.'</pre>'; # for debugging 
+     // "<pre>$offset : $perpage : $totalcount</pre>";
+	 // '<pre>'.$sqltext.'</pre>'; # for debugging 
         $sql = $db->Query($sqltext, $sql_params, $perpage, $offset);
 
         $tasks = $db->fetchAllArray($sql);
