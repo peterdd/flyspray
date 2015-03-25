@@ -1322,7 +1322,8 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
     // Add also groups and users_in_groups for view permission checks.
     // Need both global and project groups. What to do if global says
     // yes and project specific no, or the opposite? In this implementation,
-    // global wins.
+    // global wins. At least at first, tasks might still be weeded out later
+    // if we choose that kind of implementation.
 		if (!$user->isAnon() && !$user->perms('is_admin')) {
         $from   .= '
 JOIN {groups} gpg ON gpg.project_id = 0 ';
@@ -1330,14 +1331,16 @@ JOIN {groups} gpg ON gpg.project_id = 0 ';
 					|| $user->perms('view_tasks', 0)
 					|| $user->perms('view_tasks', 0)
 					|| $user->perms('view_tasks', 0)) {
-				
+        // There might be allowed tasks in any project.
         $from   .= '
 LEFT JOIN {groups} pg ON pg.project_id = p.project_id ';
         $from   .= '
 LEFT JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
 	}
 	else {
-		// There need to exist a project group for current user.
+        // There really needs to exist a project group for current user.
+		// Tasks in other projects can never be in the list of users
+        // tasks allowed to see.
         $from   .= '
 JOIN {groups} pg ON pg.project_id = p.project_id ';
         $from   .= '
