@@ -1333,7 +1333,7 @@ JOIN {groups} gpg ON gpg.project_id = 0 ';
 					|| $user->perms('view_tasks', 0)) {
         // There might be allowed tasks in any project.
         $from   .= '
-LEFT JOIN {groups} pg ON pg.project_id = p.project_id ';
+LEFT JOIN {groups} pg ON pg.project_id = p.project_id AND pg.project_id = t.project_id ';
         $from   .= '
 LEFT JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
 	}
@@ -1342,7 +1342,7 @@ LEFT JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id
 		// Tasks in other projects can never be in the list of users
         // tasks allowed to see.
         $from   .= '
-JOIN {groups} pg ON pg.project_id = p.project_id ';
+JOIN {groups} pg ON pg.project_id = p.project_id AND pg.project_id = t.project_id';
         $from   .= '
 JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
 	}
