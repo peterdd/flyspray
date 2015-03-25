@@ -1349,6 +1349,13 @@ JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? 
 	$sql_params[]  = $user->id;
 		}
 		
+        // Handle private tasks next
+		if (!$user->isAnon() && !($user->perms('is_admin') || $user->perms('manage_project', 0))) {
+            $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? OR pg.is_admin = 1 OR pg.manage_project = 1)))';
+            $sql_params[]  = $user->id;
+            $sql_params[]  = $user->id;
+        }
+		
         if (array_get($args, 'only_primary')) {
             $from   .= '
 LEFT JOIN  {dependencies} dep ON dep.dep_task_id = t.task_id ';
