@@ -1321,37 +1321,30 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
 
     // Add also groups and users_in_groups for view permission checks.
     // Need both global and project groups. What to do if global says
-    // yes and project specific no, or the opposite? In this implementation,
-    // global wins. At least at first, tasks might still be weeded out later
-    // if we choose that kind of implementation.
-		if (!$user->isAnon() && !$user->perms('is_admin')) {
+    // yes and project specific no, or the opposite? In this implementation
+    // project specific permissions win, if there exists such.
+    if (!$user->isAnon() && !$user->perms('is_admin')) {
+        // Global group exists always
         $from   .= '
-JOIN {groups} gpg ON gpg.project_id = 0 ';
-			if ($user->perms('manage_project', 0)
-					|| $user->perms('view_tasks', 0)
-					|| $user->perms('view_tasks', 0)
-					|| $user->perms('view_tasks', 0)) {
-        // There might be allowed tasks in any project.
+JOIN {groups} gpg
+    JOIN {users_in_groups} gpuig ON gpg.group_id = gpuig.group_id AND gpuig.user_id = ?		
+ON gpg.project_id = 0 ';
+        // Project group might exists or not
         $from   .= '
-LEFT JOIN {groups} pg ON pg.project_id = p.project_id AND pg.project_id = t.project_id ';
-        $from   .= '
-LEFT JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
+LEFT JOIN {groups} pg
+    JOIN {users_in_groups} puig ON pg.group_id = puig.group_id AND puig.user_id = ?		
+ON pg.project_id = t.project_id ';
+        $sql_params[]  = $user->id;
+        $sql_params[]  = $user->id;
 	}
-	else {
-        // There really needs to exist a project group for current user.
-		// Tasks in other projects can never be in the list of users
-        // tasks allowed to see.
-        $from   .= '
-JOIN {groups} pg ON pg.project_id = p.project_id AND pg.project_id = t.project_id';
-        $from   .= '
-JOIN {users_in_groups} puig ON puig.group_id = pg.group_id AND puig.user_id = ? ';
-	}
-	$sql_params[]  = $user->id;
-		}
 		
+    if (!$user->isAnon()) { 
+        $where[] = 'COALESCE(pg.view_tasks, gpg.view_tasks) = 1';
+    }
         // Handle private tasks next
-		if (!$user->isAnon() && !($user->perms('is_admin') || $user->perms('manage_project', 0))) {
-            $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? OR pg.is_admin = 1 OR pg.manage_project = 1)))';
+		if (!$user->isAnon() && !$user->perms('is_admin')) {
+            $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? 
+OR COALESCE(pg.is_admin, gpg.is_admin) = 1 OR COALESCE(pg.manage_project, gpg.manage_project) = 1)))';
             $sql_params[]  = $user->id;
             $sql_params[]  = $user->id;
         }
