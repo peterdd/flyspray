@@ -1536,19 +1536,10 @@ LEFT JOIN {notifications} fsn ON t.task_id = fsn.task_id';
             $sql_params[] = $user->id;
         }
 
-		// Finally, add view permissions checking to the query
-		// for everyone who is not an admin.
-		if (!$user->perms('is_admin')) {
-			if ($user->isAnon()) {
-				$where[] = 'p.others_view = 1';
-				$where[] = 't.mark_private = 0';
-			}
-			if (!$user->isAnon()) {
-				// No use trying to check other permissions from $user,
-				// they can be different from project to project and
-				// we can also be viewing "All projects", everything
-				// must be done with SQL.
-			}
+		// Finally, handle anynymous users. What other restrictions do they have?
+        if ($user->isAnon()) {
+            $where[] = 'p.others_view = 1';
+            $where[] = 't.mark_private = 0';
 		}
 		
         $where = (count($where)) ? 'WHERE '. join(' AND ', $where) : '';
