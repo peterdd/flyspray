@@ -1342,28 +1342,47 @@ LEFT JOIN ({groups} pg
         $where[] = '
 -- Handle permissions
     -- Case allowed to see only own tasks
-	(((GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 0 AND
-	GREATEST(pg.view_own_tasks, gpg.view_own_tasks) = 1) AND
-	(opened_by = ? OR ass.user_id = ?))
-    -- Case allowed to see only groups tasks, (TODO, see next case
-    -- and remove view_groups_tasks there when this gets implemented)
-	-- OR (
-	-- GREATEST(pg.view_tasks, gpg.view_tasks) = 0 AND GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks) = 1
-	-- )
-    -- Case allowed to see all or groups tasks (groups permission still handled on php side)
-	OR (GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 1)
-    -- Case everyone can see anyway and not private
+        (((GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 0 AND
+        GREATEST(pg.view_own_tasks, gpg.view_own_tasks) = 1) AND
+        (opened_by = ? OR ass.user_id = ?))
+    -- Case allowed to see only groups tasks
+        OR (
+            (GREATEST(pg.view_tasks, gpg.view_tasks) = 0 AND GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks) = 1)
+            AND (
+            (opened_by in (
+                SELECT DISTINCT(user_id) FROM {users_in_groups} WHERE group_id IN (
+                    SELECT g.group_id
+                    FROM {groups} g
+                    JOIN {users_in_groups} u ON g.group_id = u.group_id
+                    AND u.user_id = ? AND (g.project_id = 0 OR g.project_id = t.project_id)
+                )
+            )
+            OR
+            (ass.user_id in (
+                SELECT DISTINCT(user_id) FROM {users_in_groups} WHERE group_id IN (
+                    SELECT g.group_id
+                    FROM {groups} g
+                    JOIN {users_in_groups} u ON g.group_id = u.group_id
+                    AND u.user_id = ? AND (g.project_id = 0 OR g.project_id = t.project_id)
+                )
+            )
+        ))))
+    -- Case allowed to see all tasks
+	OR (GREATEST(pg.view_tasks, gpg.view_tasks) = 1)
+    -- Case everyone can see all tasks anyway and task not private
 	OR (t.mark_private = 0 AND p.others_view = 1))
 ';
+        $sql_params[]  = $user->id;
+        $sql_params[]  = $user->id;
+        $sql_params[]  = $user->id;
+        $sql_params[]  = $user->id;
     }
-        $sql_params[]  = $user->id;
-        $sql_params[]  = $user->id;
 
         // Handle private tasks next
 		if (!$user->isAnon() && !$user->perms('is_admin')) {
             $where[] = '
-    -- Case not everyone can see, and not private
-    -- or private and user is owner, assignee, admin or project manager
+    -- Case not everyone can see all tasks, and task not private
+    -- or task private and user is owner, assignee, admin or project manager
 	(t.mark_private = 0 OR
 	(t.mark_private = 1 AND
 		(opened_by = ? OR ass.user_id = ? OR 
