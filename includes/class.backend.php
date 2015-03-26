@@ -1321,8 +1321,9 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
 
     // Add also groups and users_in_groups for view permission checks.
     // Need both global and project groups. What to do if global says
-    // yes and project specific no, or the opposite? In this implementation
-    // project specific permissions win, if there exists such.
+    // yes and project specific no, or the opposite? Ok, current manual
+    // says global and project permissions are OR'ed together, so it shall
+    // be so in 1.0. Personally, I don't agree with that idea. -- Jouni Ahto
     if (!$user->isAnon()) {
         // Global group exists always
         $from   .= '
