@@ -1339,8 +1339,21 @@ LEFT JOIN ({groups} pg
 	}
 		
     if (!$user->isAnon()) { 
-        $where[] = '(pg.view_tasks = 1 OR gpg.view_tasks = 1)';
+        $where[] = '	-- Case allowed to see only own tasks
+	(((GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 0 AND
+	GREATEST(pg.view_own_tasks, gpg.view_own_tasks) = 1) AND
+	(opened_by = ? OR ass.user_id = ?))
+	-- Case allowed to see only groups tasks (TODO, see next case)
+	-- OR (
+	-- GREATEST(pg.view_tasks, gpg.view_tasks) = 0 AND GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks) = 1
+	-- )
+	-- Case allowed to see all or groups tasks (groups still handled on php side)
+	OR (GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 1))
+';
     }
+        $sql_params[]  = $user->id;
+        $sql_params[]  = $user->id;
+
         // Handle private tasks next
 		if (!$user->isAnon() && !$user->perms('is_admin')) {
             $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? 
