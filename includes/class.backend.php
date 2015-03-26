@@ -1617,8 +1617,6 @@ $where
 GROUP BY $groupby
 $having
 ORDER BY $sortorder";
-     // echo "<pre>$offset : $perpage : $totalcount</pre>";
-	 // echo '<pre>'.$sqltext.'</pre>'; # for debugging 
         $sql = $db->Query($sqltext, $sql_params, $perpage, $offset);
 
         $tasks = $db->fetchAllArray($sql);
@@ -1631,18 +1629,12 @@ ORDER BY $sortorder";
             if (!$user->can_view_task($task)) {
                 unset($tasks[$key]);
                 $forbidden_tasks_count++;
-				/*
-				array_pop($id_list);
-				 * 
-				
-            } elseif (!is_null($perpage) && ($task_count < $offset || ($task_count > $offset - 1 + $perpage) || ($limit > 0 && $task_count >= $limit))) {
-                unset($tasks[$key]);
-				 */
             }
-
-            // ++$task_count;
         }
 
+        // Work on this is not finished until $forbidden_tasks_count is always zero.
+        // echo "<pre>$offset : $perpage : $totalcount : $forbidden_tasks_count</pre>";
+        // echo '<pre>'.$sqltext.'</pre>'; # for debugging 
         return array($tasks, $id_list, $totalcount, $forbidden_tasks_count);
     }
 
