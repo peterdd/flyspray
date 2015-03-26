@@ -1339,16 +1339,21 @@ LEFT JOIN ({groups} pg
 	}
 		
     if (!$user->isAnon()) { 
-        $where[] = '	-- Case allowed to see only own tasks
+        $where[] = '
+-- Handle permissions
+    -- Case allowed to see only own tasks
 	(((GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 0 AND
 	GREATEST(pg.view_own_tasks, gpg.view_own_tasks) = 1) AND
 	(opened_by = ? OR ass.user_id = ?))
-	-- Case allowed to see only groups tasks (TODO, see next case)
+    -- Case allowed to see only groups tasks, (TODO, see next case
+    -- and remove view_groups_tasks there when this gets implemented)
 	-- OR (
 	-- GREATEST(pg.view_tasks, gpg.view_tasks) = 0 AND GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks) = 1
 	-- )
-	-- Case allowed to see all or groups tasks (groups still handled on php side)
-	OR (GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 1))
+    -- Case allowed to see all or groups tasks (groups permission still handled on php side)
+	OR (GREATEST(pg.view_groups_tasks, gpg.view_groups_tasks, pg.view_tasks, gpg.view_tasks) = 1)
+    -- Case everyone can see anyway and not private
+	OR (t.mark_private = 0 AND p.others_view = 1))
 ';
     }
         $sql_params[]  = $user->id;
@@ -1356,8 +1361,16 @@ LEFT JOIN ({groups} pg
 
         // Handle private tasks next
 		if (!$user->isAnon() && !$user->perms('is_admin')) {
-            $where[] = '(t.mark_private = 0 OR (t.mark_private = 1 AND (opened_by = ? OR ass.user_id = ? 
-OR (pg.is_admin = 1 OR gpg.is_admin = 1) OR (pg.manage_project = 1 OR gpg.manage_project = 1))))';
+            $where[] = '
+    -- Case not everyone can see, and not private
+    -- or private and user is owner, assignee, admin or project manager
+	(t.mark_private = 0 OR
+	(t.mark_private = 1 AND
+		(opened_by = ? OR ass.user_id = ? OR 
+		(pg.is_admin = 1 OR gpg.is_admin = 1) OR
+		(pg.manage_project = 1 OR gpg.manage_project = 1))))
+-- Permissions handled, other search conditions next
+';
             $sql_params[]  = $user->id;
             $sql_params[]  = $user->id;
         }
