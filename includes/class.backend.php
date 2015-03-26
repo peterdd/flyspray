@@ -1326,14 +1326,14 @@ LEFT JOIN  {users} u ON ass.user_id = u.user_id ';
     if (!$user->isAnon()) {
         // Global group exists always
         $from   .= '
-JOIN {groups} gpg
+JOIN ({groups} gpg
     JOIN {users_in_groups} gpuig ON gpg.group_id = gpuig.group_id AND gpuig.user_id = ?		
-ON gpg.project_id = 0 ';
+) ON gpg.project_id = 0 ';
         // Project group might exists or not
         $from   .= '
-LEFT JOIN {groups} pg
+LEFT JOIN ({groups} pg
     JOIN {users_in_groups} puig ON pg.group_id = puig.group_id AND puig.user_id = ?		
-ON pg.project_id = t.project_id ';
+) ON pg.project_id = t.project_id ';
         $sql_params[]  = $user->id;
         $sql_params[]  = $user->id;
 	}
@@ -1572,8 +1572,8 @@ $where
 GROUP BY $groupby
 $having
 ORDER BY $sortorder";
-     // "<pre>$offset : $perpage : $totalcount</pre>";
-	 // '<pre>'.$sqltext.'</pre>'; # for debugging 
+     // echo "<pre>$offset : $perpage : $totalcount</pre>";
+	 // echo '<pre>'.$sqltext.'</pre>'; # for debugging 
         $sql = $db->Query($sqltext, $sql_params, $perpage, $offset);
 
         $tasks = $db->fetchAllArray($sql);
