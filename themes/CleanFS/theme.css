@@ -365,6 +365,8 @@ a.negative:active {background-color: #d12f19;border: 1px solid #d12f19;color: #f
   border: solid 1px #e1e1e1;
   border-radius: 3px;
 }
+#sc2 {position:relative;}
+.save_search{position:absolute;right:0px;top:-70px;z-index:10;} /* TODO: extra rules for small devices */
 #search fieldset {
     margin: 10px 0px 10px 0px;
     padding: 10px;
