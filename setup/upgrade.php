@@ -150,6 +150,12 @@ function execute_upgrade_file($folder, $installed_version)
             $schema = new adoSchema($db->dblink);
             $xml = file_get_contents($upgrade_path . '/' . $file);
             $xml = str_replace('<table name="', '<table name="' . $conf['database']['dbprefix'], $xml);
+
+		# TODO Before adding custom fields to Flyspray as new feature we should think about
+		# how we automatic keep user defined custom fields on upgrades.
+		# - Either add existing task.custom_* columns to schema, read from INFORMATION_SCHEMA, inject into xml at end of task-table part <- looks easier to me, no dependencies on adoSchema.
+		# - Or extend class adoSchema and modify ParseSchemaString and inject there the custom fields?
+
             $schema->ParseSchemaString($xml);
             $schema->ExecuteSchema(null, true);
         }
