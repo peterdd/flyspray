@@ -365,11 +365,11 @@
     </field>
     <field name="view_own_tasks" type="I" size="1">
       <NOTNULL/>
-      <DEFAULT value="1"/>
+      <DEFAULT value="0"/>
     </field>
     <field name="view_groups_tasks" type="I" size="1">
       <NOTNULL/>
-      <DEFAULT value="1"/>
+      <DEFAULT value="0"/>
     </field>
     <index name="group_name">
       <UNIQUE/>
@@ -425,7 +425,7 @@
       <NOTNULL/>
       <DEFAULT value="0"/>
     </field>
-    <field name="category_name" type="C" size="30">
+    <field name="category_name" type="C" size="40">
       <NOTNULL/>
     </field>
     <field name="show_in_list" type="I" size="1">
@@ -683,6 +683,10 @@
       <NOTNULL/>
       <DEFAULT value="0"/>
     </field>
+    <field name="others_viewroadmap" type="I" size="1">
+      <NOTNULL/>
+      <DEFAULT value="0"/>
+    </field>
     <field name="anon_open" type="I" size="1">
       <NOTNULL/>
       <DEFAULT value="0"/>
@@ -763,7 +767,7 @@
       <NOTNULL/>
       <DEFAULT value="0"/>
     </field>
-    <field name="default_order_by" type="C" size="30">
+    <field name="default_order_by" type="C" size="100">
       <NOTNULL/>
       <DEFAULT value="id"/>
     </field>

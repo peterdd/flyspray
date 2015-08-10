@@ -8,10 +8,68 @@
     </div>
 </div>
 <?php endif; ?>
+<?php if ($do=='pm'):
+# show systemwide settings for this list on project setting page too ..
+?>
+<h3><?php echo Filters::noXSS(L('systemvalues'));
+# TODO: do we have still a matching translation string name we can use instead inventing a new one?
+# TODO: should be h2 tag, h1 tag for page type title, and project/flyspray title not a h1-tag in the header.
+?></h3>
+<table class="list" id="idtablesys">
+<colgroup>
+<col class="cname"></col>
+<col class="corder"></col>
+<col class="cshow"></col>
+<?php if ($list_type == 'version'): ?><col class="ctense"></col><?php endif; ?>
+<col class="cdelete"></col>
+</colgroup>
+<thead>
+<tr>
+    <th><?php echo Filters::noXSS(L('name')); ?></th>
+    <th><?php echo Filters::noXSS(L('order')); ?></th>
+    <th><?php echo Filters::noXSS(L('show')); ?></th>
+    <?php if ($list_type == 'version'): ?><th><?php echo Filters::noXSS(L('tense')); ?></th><?php endif; ?>
+    <th>&nbsp;</th>
+</tr>
+</thead>
+<tbody>
+<?php if (isset($sysrows) && count($sysrows)): ?>
+<?php
+$syscountlines=-1;
+foreach ($sysrows as $row):
+$syscountlines++;
+?>
+<tr>
+    <td class="first"><?php echo Filters::noXSS($row[$list_type.'_name']); ?></td>
+    <td title="<?php echo Filters::noXSS(L('ordertip')); ?>"><?php echo Filters::noXSS($row['list_position']); ?></td>
+    <td title="<?php echo Filters::noXSS(L('showtip')); ?>"><?php echo $row['show_in_list']; ?></td>
+    <?php if ($list_type == 'version'): ?><td title="<?php echo Filters::noXSS(L('listtensetip')); ?>"><?php echo $row[$list_type.'_tense']; ?></td><?php endif; ?>
+    <td>&nbsp;</td>
+</tr>
+<?php endforeach; ?>
+<?php else: ?>
+<tr><td colspan="<?php echo $list_type=='version' ? 5 : 4; ?>"><?php echo Filters::noXSS(L('novalues'));
+# TODO: do we have still a matching translation string name we can use instead inventing a new one?
+?></td></tr>
+<?php endif; ?>
+</tbody>
+</table>
+<?php endif; ?>
 <?php echo tpl_form(Filters::noXSS(CreateURL($do, $list_type, $proj->id))); ?>
-  <table class="list" id="listTable">
-   <thead>
-     <tr>
+<h3><?php echo $do=='pm' ? Filters::noXSS(L('projectvalues')) : Filters::noXSS(L('systemvalues'));
+# TODO: do we have still a matching translation string name we can use instead inventing a new one?
+# TODO: should be h2 tag, h1 tag for page type title, and project/flyspray title not a h1-tag in the header.
+?></h3>
+<table class="list" id="listTable">
+<colgroup>
+    <col class="cname"></col>
+    <col class="corder"></col>
+    <col class="cshow"></col>
+    <?php if ($list_type == 'version'): ?><col class="ctense"></col><?php endif; ?>
+    <col class="cdelete"></col>
+</colgroup>
+<thead>
+    <tr>
        <th><?php echo Filters::noXSS(L('name')); ?></th>
        <th><?php echo Filters::noXSS(L('order')); ?></th>
        <th><?php echo Filters::noXSS(L('show')); ?></th>
@@ -26,11 +84,11 @@
     $countlines++; ?>
     <tr>
       <td class="first">
-        <input id="listname<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" size="15" maxlength="40" name="list_name[<?php echo Filters::noXSS($row[$list_type.'_id']); ?>]"
+        <input id="listname<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" maxlength="40" name="list_name[<?php echo Filters::noXSS($row[$list_type.'_id']); ?>]"
           value="<?php echo Filters::noXSS($row[$list_type.'_name']); ?>" />
       </td>
       <td title="<?php echo Filters::noXSS(L('ordertip')); ?>">
-        <input id="listposition<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" size="3" maxlength="3" name="list_position[<?php echo Filters::noXSS($row[$list_type.'_id']); ?>]" value="<?php echo Filters::noXSS($row['list_position']); ?>" />
+        <input id="listposition<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" maxlength="3" name="list_position[<?php echo Filters::noXSS($row[$list_type.'_id']); ?>]" value="<?php echo Filters::noXSS($row['list_position']); ?>" />
       </td>
       <td title="<?php echo Filters::noXSS(L('showtip')); ?>">
         <?php echo tpl_checkbox('show_in_list[' . $row[$list_type.'_id'] . ']', $row['show_in_list'], 'showinlist'.$countlines); ?>
@@ -86,8 +144,16 @@
 </form>
 <hr />
 <?php echo tpl_form(Filters::noXSS(CreateURL($do, $list_type, $proj->id))); ?>
-  <table class="list">
-    <tr>
+<table class="list">
+<colgroup>
+    <col class="cname"></col>
+    <col class="corder"></col>
+    <col class="cshow"></col>
+    <?php if ($list_type == 'version'): ?><col class="ctense"></col><?php endif; ?>
+    <col class="cdelete"></col>
+</colgroup>
+<tbody>
+<tr>
       <td>
         <?php if ($list_type == 'version'): ?>
         <input type="hidden" name="action" value="<?php echo Filters::noXSS($do); ?>.add_to_version_list" />
@@ -100,10 +166,10 @@
         <?php endif; ?>
         <input type="hidden" name="area" value="<?php echo Filters::noXSS(Req::val('area')); ?>" />
         <input type="hidden" name="do" value="<?php echo Filters::noXSS(Req::val('do')); ?>" />
-        <input id="listnamenew" class="text" type="text" size="15" maxlength="40" value="<?php echo Filters::noXSS(Req::val('list_name')); ?>" name="list_name" autofocus />
+        <input id="listnamenew" placeholder="<?php echo Filters::noXSS(L('name')); ?>" class="text" type="text" maxlength="40" value="<?php echo Filters::noXSS(Req::val('list_name')); ?>" name="list_name" autofocus />
       </td>
       <td>
-        <input id="listpositionnew" class="text" type="text" size="3" maxlength="3" value="<?php echo Filters::noXSS(Req::val('list_position')); ?>" name="list_position" />
+        <input id="listpositionnew" placeholder="<?php echo Filters::noXSS(L('order')); ?>" class="text" type="text" maxlength="3" value="<?php echo Filters::noXSS(Req::val('list_position')); ?>" name="list_position" />
       </td>
       <td>
         <input id="showinlistnew" type="checkbox" name="show_in_list" checked="checked" disabled="disabled" />
@@ -121,5 +187,6 @@
         <button type="submit"><?php echo Filters::noXSS(L('addnew')); ?></button>
       </td>
     </tr>
-  </table>
+</tbody>
+</table>
 </form>

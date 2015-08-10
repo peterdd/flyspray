@@ -513,7 +513,7 @@ function quick_edit(elem, id)
             <span class="label"><?php echo Filters::noXSS(L('duedate')); ?></span>
 	    <span <?php if ($user->can_edit_task($task_details)): ?>onclick="show_hide(this, true)"<?php endif;?> class="value">
 			<?php echo Filters::noXSS(formatDate($task_details['due_date'], false, L('undecided'))); ?><br><?php
-				$days = (strtotime(date('c', $task_details['due_date'])) - strtotime(date("Y-m-d"))) / (60 * 60 * 24);
+				$days = floor((strtotime(date('c', $task_details['due_date'])) - strtotime(date("Y-m-d"))) / (60 * 60 * 24));
 				if($task_details['due_date'] > 0)
 				{
 					if($days <$fs->prefs['days_before_alert'] && $days > 0)
@@ -523,7 +523,7 @@ function quick_edit(elem, id)
 					elseif($days < 0)
 					{
 						echo "<font style='color: red; font-weight: bold'>".str_replace('-', '', $days)."
-                        ".L('daysoverdue')."</font>";
+                        ".L('dayoverdue')."</font>";
 					}
 					elseif($days == 0)
 					{
@@ -682,14 +682,8 @@ function quick_edit(elem, id)
     <div id="taskdetailsfull">
         <h2 class="summary severity<?php echo Filters::noXSS($task_details['task_severity']); ?>">
             FS#<?php echo Filters::noXSS($task_details['task_id']); ?> - <?php echo Filters::noXSS($task_details['item_summary']); ?>
-
         </h2>
-        <h4>
-            Tags: <?php echo Filters::noXSS($tag_list); ?>
-
-        </h4>
-        <!--<h3 class="taskdesc"><?php echo Filters::noXSS(L('details')); ?></h3>-->
-
+        <span class="tags"><?php foreach($tags as $tag): ?><span><?php echo Filters::noXSS($tag['tag']); ?></span><?php endforeach; ?></span>
         <div id="taskdetailstext"><?php echo $task_text; ?></div>
 
         <?php $attachments = $proj->listTaskAttachments($task_details['task_id']);

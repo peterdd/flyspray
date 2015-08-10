@@ -114,6 +114,14 @@
                     <?php echo tpl_checkbox('only_primary', Get::has('only_primary'), 'only_primary'); ?>
                     <label class="left" for="only_primary"><?php echo Filters::noXSS(L('onlyprimary')); ?></label>
 
+		<?php echo tpl_checkbox('only_blocker', Get::has('only_blocker'), 'only_blocker'); ?>
+		<label class="left" for="only_blocker" id="blockerlabel"><?php echo Filters::noXSS(L('onlyblocker')); ?></label>
+		<span id="blockerornoblocker"><?php echo Filters::noXSS(L('blockerornoblocker')); ?></span>
+		<style>
+		#blockerornoblocker {display:none;color:#c00;}
+		#only_primary:checked ~ #only_blocker:checked ~ #blockerornoblocker {display:inline;}
+		</style>
+		
                     <?php echo tpl_checkbox('has_attachment', Get::has('has_attachment'), 'has_attachment'); ?>
                     <label class="left" for="has_attachment"><?php echo Filters::noXSS(L('hasattachment')); ?></label>
 
@@ -264,72 +272,74 @@
             </div>
 </form>
 <?php endif; ?>
-
+<?php if (isset($_GET['string']) || $total): ?>
 <div id="tasklist">
 <?php echo tpl_form(Filters::noXSS(CreateURL('project', $proj->id, null, $_GET)),'massops',null,null,'id="massops"'); ?>
 <div>
-<table id="tasklist_table">
-    <thead>
-    <tr>
-        <th class="caret">
-        </th>
-        <?php if (!$user->isAnon()): ?>
-        <th class="ttcolumn">
-            <?php if (!$user->isAnon() && $total): ?>
-            <a title="<?php echo Filters::noXSS(L('toggleselected')); ?>" href="javascript:ToggleSelected('massops')" onclick="massSelectBulkEditCheck();">
-            </a>
-            <?php endif; ?>
-        </th>
-        <?php endif; ?>
-        <?php foreach ($visible as $col): ?>
-        <?php echo tpl_list_heading($col, "<th%s>%s</th>"); ?>
-        <?php endforeach; ?>
-    </tr>
-    </thead>
-    <tbody>
-    <script type="text/javascript">
+<script type="text/javascript">
 	var cX = 0; var cY = 0; var rX = 0; var rY = 0;
 	function UpdateCursorPosition(e){ cX = e.pageX; cY = e.pageY;}
 	function UpdateCursorPositionDocAll(e){ cX = e.clientX; cY = e.clientY;}
 	if(document.all) { document.onmousemove = UpdateCursorPositionDocAll; }
 	else { document.onmousemove = UpdateCursorPosition; }
 	function AssignPosition(d) {
-		if(self.pageYOffset)
-		{
+		if (self.pageYOffset) {
 			rX = self.pageXOffset;
 			rY = self.pageYOffset;
-		}
-		else if(document.documentElement && document.documentElement.scrollTop) {
+		} else if(document.documentElement && document.documentElement.scrollTop) {
 			rX = document.documentElement.scrollLeft;
 			rY = document.documentElement.scrollTop;
-		}
-		else if(document.body) {
+		} else if(document.body) {
 			rX = document.body.scrollLeft;
 			rY = document.body.scrollTop;
 		}
-		if(document.all) {
+		if (document.all) {
 			cX += rX;
 			cY += rY;
 		}
 		d.style.left = (cX+10) + "px";
 		d.style.top = (cY+10) + "px";
 	}
-	function Show(elem, id)
-	{
+	function Show(elem, id) {
 		var div = document.getElementById("desc_"+id);
 		AssignPosition(div);
 		div.style.display = "block";
 	}
-	function Hide(elem, id)
-	{
+	function Hide(elem, id)	{
 		document.getElementById("desc_"+id).style.display = "none";
 	}
-    </script>
-    <?php foreach ($tasks as $task_details):?>
+</script>	
+<table id="tasklist_table">
+<colgroup>
+	<col class="caret" />
+	<?php if (!$user->isAnon() && $proj->id !=0): ?><col class="toggle" /><?php endif; ?>
+	<?php foreach ($visible as $col): ?>
+        <col class="<?php echo $col; ?>" />
+        <?php endforeach; ?>
+</colgroup>
+<thead>
+    <tr>
+        <th class="caret">
+        </th>
+        <?php if (!$user->isAnon() && $proj->id !=0): ?>
+        <th class="ttcolumn">
+        <?php if (!$user->isAnon() && $total): ?>
+            <a title="<?php echo Filters::noXSS(L('toggleselected')); ?>" href="javascript:ToggleSelected('massops')" onclick="massSelectBulkEditCheck();">
+            </a>
+        <?php endif; ?>
+        </th>
+        <?php endif; ?>
+        <?php foreach ($visible as $col): ?>
+        <?php echo tpl_list_heading($col, "<th%s>%s</th>"); ?>
+        <?php endforeach; ?>
+    </tr>
+</thead>
+<tbody>
+<?php foreach ($tasks as $task_details):?>
     <tr id="task<?php echo $task_details['task_id']; ?>" class="severity<?php echo Filters::noXSS($task_details['task_severity']); ?>" onmouseover="Show(this,<?php echo $task_details['task_id']; ?>)" onmouseout="Hide(this, <?php echo $task_details['task_id']; ?>)">
         <td class="caret">
         </td>
-        <?php if (!$user->isAnon()): ?>
+        <?php if (!$user->isAnon() && $proj->id !=0): ?>
         <td class="ttcolumn">
             <input class="ticktask" type="checkbox" name="ids[]" onclick="BulkEditCheck()" value="<?php echo Filters::noXSS($task_details['task_id']); ?>"/>
         </td>
@@ -353,8 +363,8 @@
 <?php echo $task_details['detailed_desc'] ? TextFormatter::render($task_details['detailed_desc'], 'task', $task_details['task_id']) : '<p>'.L('notaskdescription').'</p>'; ?>
 </td>
     </tr>
-    <?php endforeach; ?>
-    </tbody>
+<?php endforeach; ?>
+</tbody>
 </table>
 <table id="pagenumbers">
     <tr>
@@ -374,8 +384,7 @@
 </table>
 
 <!-- Bulk editing Tasks -->
-<?php if (!$proj->id == 0): ?>
-<?php if (!$user->isAnon() && $total): ?>
+<?php if (!$user->isAnon() && $proj->id !=0 && $total): ?>
 <!-- Grab fields wanted for this project so we only show those specified in the settings -->
 <script>Effect.Fade('bulk_edit_selectedItems');</script>
 <div id="bulk_edit_selectedItems" style="display:none">
@@ -591,9 +600,8 @@
     </fieldset>
 
 </div>
-
-<?php endif ?>
-<?php endif ?>
+<?php endif; /* !$user->isAnon() && $proj-> !=0 && $total */ ?>
 </div>
 </form>
 </div>
+<?php endif; /* isset($_GET['string'] || $total */ ?>

@@ -5,11 +5,14 @@
      <?php if(isset($_GET['area']) and $_GET['area'] == 'prefs') echo $activeclass; ?>
      href="<?php echo Filters::noXSS(CreateURL('pm', 'prefs',      $proj->id)); ?>"><?php echo Filters::noXSS(L('preferences')); ?></a>
   <a id="projuglink"
-     <?php if(isset($_GET['area']) and $_GET['area'] == 'groups') echo $activeclass; ?>
+     <?php if(isset($_GET['area']) and ($_GET['area'] == 'groups' || $_GET['area'] == 'newgroup' || $_GET['area'] == 'editgroup') ) echo $activeclass; ?>
      href="<?php echo Filters::noXSS(CreateURL('pm', 'groups',     $proj->id)); ?>"><?php echo Filters::noXSS(L('usergroups')); ?></a>
   <a id="projttlink"
      <?php if(isset($_GET['area']) and $_GET['area'] == 'tasktype') echo $activeclass; ?>
-     href="<?php echo Filters::noXSS(CreateURL('pm', 'tasktype',         $proj->id)); ?>"><?php echo Filters::noXSS(L('tasktypes')); ?></a>
+     href="<?php echo Filters::noXSS(CreateURL('pm', 'tasktype', $proj->id)); ?>"><?php echo Filters::noXSS(L('tasktypes')); ?></a>
+  <a id="projtglink"
+     <?php if(isset($_GET['area']) and $_GET['area'] == 'tags') echo $activeclass; ?>
+     href="<?php echo Filters::noXSS(CreateURL('pm', 'tags',  $proj->id)); ?>"><i class="fa fa-tag"></i><?php echo Filters::noXSS(L('tags')); ?></a>
   <a id="projstatuslink"
      <?php if(isset($_GET['area']) and $_GET['area'] == 'status') echo $activeclass; ?>
      href="<?php echo Filters::noXSS(CreateURL('pm', 'status',     $proj->id)); ?>"><?php echo Filters::noXSS(L('taskstatuses')); ?></a>

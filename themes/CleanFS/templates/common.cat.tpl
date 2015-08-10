@@ -2,8 +2,12 @@
 <?php
 $countlines = -1;
 $categories = $proj->listCategories($proj->id, false, false, false);
-$root = $categories[0];
-unset($categories[0]);
+if ( count($categories) ){
+  $root = $categories[0];
+  unset($categories[0]);
+} else{
+  $root=array();
+}
 
 if (count($categories)) : ?>
 <div id="controlBox">
@@ -36,7 +40,7 @@ if (count($categories)) : ?>
           <input type="hidden" name="lft[<?php echo Filters::noXSS($row['category_id']); ?>]" value="<?php echo Filters::noXSS($row['lft']); ?>" />
           <input type="hidden" name="rgt[<?php echo Filters::noXSS($row['category_id']); ?>]" value="<?php echo Filters::noXSS($row['rgt']); ?>" />
           <span class="depthmark"><?php echo str_repeat('&rarr;', intval($row['depth'])); ?></span>
-          <input id="categoryname<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" size="15" maxlength="40" name="list_name[<?php echo Filters::noXSS($row['category_id']); ?>]" value="<?php echo Filters::noXSS($row['category_name']); ?>" />
+          <input id="categoryname<?php echo Filters::noXSS($countlines); ?>" class="text" type="text" maxlength="40" name="list_name[<?php echo Filters::noXSS($row['category_id']); ?>]" value="<?php echo Filters::noXSS($row['category_name']); ?>" />
         </td>
         <td title="<?php echo Filters::noXSS(L('categoryownertip')); ?>">
           <?php echo tpl_userselect('category_owner[' . $row['category_id'] . ']' . $countlines, $row['category_owner'], 'categoryowner' . $countlines); ?>
@@ -86,7 +90,7 @@ if (count($categories)) : ?>
     <table class="list">
       <tr>
         <td>
-          <input id="listnamenew" class="text" type="text" size="15" maxlength="40" name="list_name" autofocus />
+          <input id="listnamenew" class="text" type="text" maxlength="40" name="list_name" autofocus />
         </td>
         <td title="<?php echo Filters::noXSS(L('categoryownertip')); ?>">
           <?php echo tpl_userselect('category_owner', Req::val('category_owner'), 'categoryownernew'); ?>
@@ -97,7 +101,6 @@ if (count($categories)) : ?>
           <select id="parent_id" name="parent_id">
             <option value="<?php echo Filters::noXSS($root['category_id']); ?>"><?php echo Filters::noXSS(L('notsubcategory')); ?></option>
             <?php echo tpl_options($proj->listCategories($proj->id, false), Req::val('parent_id')); ?>
-
           </select>
         </td>
         <td class="buttons">
