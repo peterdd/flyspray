@@ -37,8 +37,12 @@ if(ini_get('safe_mode') == 1){
 	<body style="padding:2em;"><img src="../flyspray.png" style="display:block;margin:auto;">
 		<h2>It seems you try to install a development version of Flyspray.</h2>
 		<h2><?php echo L('needcomposer'); ?></h2>
-<?php if (!extension_loaded('phar')) : ?>
-        <h1 class="error">Missing php phar extension needed. Please install it for your operating system and restart the webserver.</h1>
+<?php
+$missing=array();
+if (!extension_loaded('phar'){ $missing[]='phar'; }
+if (!extension_loaded('openssl'){ $missing[]='openssl'; }
+if (count($missing >0)) : ?>
+        <h1 class="error"><?php echo implode(' and ', $missing); ?> extension needed. Please install it for your operating system and restart the webserver.</h1>
 <?php else: ?>
 		<a href="<?php echo $composerit; ?>" class="button" style="margin:auto;max-width:300px;text-align:center;display:block;font-size:2em;"><?php echo L('installcomposer'); ?></a>
 		<p style="margin-top:50px;">
