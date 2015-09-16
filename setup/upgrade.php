@@ -73,6 +73,12 @@ $page = new Tpl;
 $page->assign('title', 'Upgrade ');
 $page->assign('short_version', UPGRADE_VERSION);
 
+if (!isset($conf['syntax_plugin']) || !$conf['syntax_plugin'] || $conf['syntax_plugin'] == 'none') {
+    $page->assign('ask_for_conversion', true);
+} else {
+    $page->assign('ask_for_conversion', false);
+}
+
 //cleanup
 //the cache dir
 @rmdirr(sprintf('%s/cache/dokuwiki', APPLICATION_PATH));
@@ -99,21 +105,36 @@ if (Post::val('upgrade')) {
         }
     }
 
-    $db->Query('UPDATE {projects} SET theme_style = \'CleanFS\'');
-
     # maybe as Filter: $out=html2wiki($input, 'wikistyle'); and $out=wiki2html($input, 'wikistyle') ?
+    # No need for any filter, because dokuwiki format wouldn't be touched anyway. But maybe ask the user
+    # first and explain that html-formatting is now used instead of plain text on installations that didn't
+    # use dokuwiki format. Then, adding paragraph tags and line breaks might enhance readability.
     // For testing, do not use yet, have to discuss this one with others.
-    //if (!$conf['syntax_plugin'] || $conf['syntax_plugin'] == 'none') {
-    // convert_old_entries('tasks', 'detailed_desc', 'task_id');
-    // convert_old_entries('projects', 'intro_message', 'project_id');
-    // convert_old_entries('projects', 'default_task', 'project_id');
-    // convert_old_entries('comments', 'comment_text', 'comment_id');
-    //}
-
-    $db->Query('UPDATE {prefs} SET pref_value = ? WHERE pref_name = ?', array('CleanFS', 'global_theme'));
+    if ((!isset($conf['syntax_plugin']) || !$conf['syntax_plugin'] || $conf['syntax_plugin'] == 'none') && Post::val('yes_please_do_convert')) {
+        convert_old_entries('tasks', 'detailed_desc', 'task_id');
+        convert_old_entries('projects', 'intro_message', 'project_id');
+        convert_old_entries('projects', 'default_task', 'project_id');
+        convert_old_entries('comments', 'comment_text', 'comment_id');
+        $page->assign('conversion', true);
+    } else {
+        $page->assign('conversion', false);
+    }
 
     // we should be done at this point
     $db->Query('UPDATE {prefs} SET pref_value = ? WHERE pref_name = ?', array($fs->version, 'fs_ver'));
+    
+    // Fix the sequence in tasks table for PostgreSQL.
+    if ($db->dblink->dataProvider == 'postgres') {
+        $rslt = $db->Query('SELECT MAX(task_id) FROM {tasks}');
+        $maxid = $db->FetchOne($rslt);
+        // The correct sequence should normally have a name containing at least both the table and column name in this format. 
+        $rslt = $db->Query('SELECT relname FROM pg_class WHERE NOT relname ~ \'pg_.*\' AND relname LIKE \'%' . $conf['database']['dbprefix'] . 'tasks_task_id%\' AND relkind = \'S\'');
+        if ($db->CountRows($rslt) == 1) {
+            $seqname = $db->FetchOne($rslt);
+            $db->Query('SELECT setval(?, ?)', array($seqname, $maxid));
+        }
+    }
+    // */
     $db->dblink->CompleteTrans();
     $installed_version = $fs->version;
     $page->assign('done', true);
@@ -149,7 +170,9 @@ function execute_upgrade_file($folder, $installed_version)
         if (substr($file, -4) == '.xml') {
             $schema = new adoSchema($db->dblink);
             $xml = file_get_contents($upgrade_path . '/' . $file);
-            $xml = str_replace('<table name="', '<table name="' . $conf['database']['dbprefix'], $xml);
+            // $xml = str_replace('<table name="', '<table name="' . $conf['database']['dbprefix'], $xml);
+            // Set the prefix for database objects ( before parsing)
+            $schema->setPrefix($conf['database']['dbprefix'], false);
             $schema->ParseSchemaString($xml);
             $schema->ExecuteSchema(null, true);
         }
@@ -569,7 +592,7 @@ function fix_version_table($dups) {
 function convert_old_entries($table, $column, $key) {
     global $db;
 
-    // Assuming that anything not beginning with <p> was made with older
+    // Assuming that anything not beginning with < was made with older
     // versions of flyspray. This will not catch neither those old entries
     // where the user for some reason really added paragraph tags nor those
     // made with development version before fixing ckeditors configuration
@@ -577,7 +600,7 @@ function convert_old_entries($table, $column, $key) {
     // should be just good enough.
     $sql = $db->Query("SELECT $key, $column "
             . "FROM {". $table . "} "
-            . "WHERE $column NOT LIKE '<p>%'");
+            . "WHERE $column NOT LIKE '<%'");
     $entries = $db->fetchAllArray($sql);
 
     # We should probably better use existing and proven filters for the conversions

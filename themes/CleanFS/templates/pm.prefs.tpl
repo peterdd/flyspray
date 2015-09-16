@@ -14,26 +14,24 @@
       <ul class="form_elements wide">
         <li>
           <label for="projecttitle"><?php echo Filters::noXSS(L('projecttitle')); ?></label>
-          <input id="projecttitle" name="project_title" class="text" type="text" size="40" maxlength="100"
+          <input id="projecttitle" name="project_title" class="text" type="text" maxlength="100"
             value="<?php echo Filters::noXSS(Post::val('project_title', $proj->prefs['project_title'])); ?>" />
         </li>
 
         <li>
           <label for="defaultcatowner"><?php echo Filters::noXSS(L('defaultcatowner')); ?></label>
           <?php echo tpl_userselect('default_cat_owner', Post::val('default_cat_owner', $proj->prefs['default_cat_owner']), 'defaultcatowner'); ?>
-
         </li>
 
         <li>
           <label for="langcode"><?php echo Filters::noXSS(L('language')); ?></label>
           <select id="langcode" name="lang_code">
             <?php echo tpl_options(Flyspray::listLangs(), Post::val('lang_code', $proj->prefs['lang_code']), true); ?>
-
           </select>
         </li>
 
         <li>
-          <label><?php echo Filters::noXSS(L('pagesintromsg')); ?></label>
+          <label class="labeltextarea"><?php echo Filters::noXSS(L('pagesintromsg')); ?></label>
           <?php
             $pages = array(
                 'index' => L('tasklist'),
@@ -51,41 +49,31 @@
         </li>
 
         <li>
-          <label for="intromesg"><?php echo Filters::noXSS(L('intromessage')); ?></label>
+          <label class="labeltextarea" for="intromesg"><?php echo Filters::noXSS(L('intromessage')); ?></label>
           <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
           <div class="hide preview" id="preview"></div>
-          <?php endif; ?>
-          <?php echo TextFormatter::textarea('intro_message', 8, 70, array('accesskey' => 'r', 'tabindex' => 8, 'id' => 'intromesg'), Post::val('intro_message', $proj->prefs['intro_message'])); ?>
-
-          <br />
-          <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
           <button tabindex="9" type="button" onclick="showPreview('intromesg', '<?php echo Filters::noJsXSS($baseurl); ?>', 'preview')"><?php echo Filters::noXSS(L('preview')); ?></button>
           <?php endif; ?>
+          <?php echo TextFormatter::textarea('intro_message', 8, 70, array('accesskey' => 'r', 'tabindex' => 8, 'id' => 'intromesg'), Post::val('intro_message', $proj->prefs['intro_message'])); ?>
         </li>
 
         <li>
-          <label for="default_task"><?php echo Filters::noXSS(L('defaulttask')); ?></label>
+          <label class="labeltextarea" for="default_task"><?php echo Filters::noXSS(L('defaulttask')); ?></label>
           <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
           <div class="hide preview" id="preview_taskdesc"></div>
-          <?php endif; ?>
-          <?php echo TextFormatter::textarea('default_task', 8, 70, array('accesskey' => 'r', 'tabindex' => 8, 'id' => 'default_task'), Post::val('default_task', $proj->prefs['default_task'])); ?>
-
-          <br />
-          <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
           <button tabindex="9" type="button" onclick="showPreview('default_task', '<?php echo Filters::noJsXSS($baseurl); ?>', 'preview_taskdesc')"><?php echo Filters::noXSS(L('preview')); ?></button>
           <?php endif; ?>
+          <?php echo TextFormatter::textarea('default_task', 8, 70, array('accesskey' => 'r', 'tabindex' => 8, 'id' => 'default_task'), Post::val('default_task', $proj->prefs['default_task'])); ?>
         </li>
 
         <li>
           <label for="isactive"><?php echo Filters::noXSS(L('isactive')); ?></label>
           <?php echo tpl_checkbox('project_is_active', Post::val('project_is_active', $proj->prefs['project_is_active']), 'isactive'); ?>
-
         </li>
 
         <li>
           <label for="disp_intro"><?php echo Filters::noXSS(L('dispintro')); ?></label>
           <?php echo tpl_checkbox('disp_intro', Post::val('disp_intro', $proj->prefs['disp_intro']), 'disp_intro'); ?>
-
         </li>
 
         <li>
@@ -96,7 +84,6 @@
         <li>
           <label for="othersview"><?php echo Filters::noXSS(L('othersview')); ?></label>
           <?php echo tpl_checkbox('others_view', Post::val('others_view', $proj->prefs['others_view']), 'othersview'); ?>
-
         </li>
 
         <li>
@@ -107,19 +94,16 @@
         <li>
           <label for="anon_open"><?php echo Filters::noXSS(L('allowanonopentask')); ?></label>
           <?php echo tpl_checkbox('anon_open', Post::val('anon_open', $proj->prefs['anon_open']), 'anon_open'); ?>
-
         </li>
 
         <li>
           <label for="comment_closed"><?php echo Filters::noXSS(L('allowclosedcomments')); ?></label>
           <?php echo tpl_checkbox('comment_closed', Post::val('comment_closed', $proj->prefs['comment_closed']), 'comment_closed'); ?>
-
         </li>
 
         <li>
           <label for="auto_assign"><?php echo Filters::noXSS(L('autoassign')); ?></label>
           <?php echo tpl_checkbox('auto_assign', Post::val('auto_assign', $proj->prefs['auto_assign']), 'auto_assign'); ?>
-
         </li>
 
         <li>
@@ -127,8 +111,12 @@
           <select id="defaultdueversion" name="default_due_version">
               <option value="0"><?php echo Filters::noXSS(L('undecided')); ?></option>
               <?php echo tpl_options($proj->listVersions(false, 3), Post::val('default_due_version', $proj->prefs['default_due_version']), true); ?>
-
           </select>
+        </li>
+        
+        <li>
+          <label for="freetagging"><?php echo Filters::noXSS(L('freetagging')); ?></label>
+          <?php echo tpl_checkbox('freetagging', Post::val('freetagging', $proj->prefs['freetagging']), 'freetagging'); ?>
         </li>
       </ul>
     </div>
@@ -231,7 +219,6 @@
           $selectedfields = explode(' ', Post::val('visible_fields', $proj->prefs['visible_fields']));
           ?>
           <?php echo tpl_double_select('visible_fields', $fieldnames, $selectedfields, false); ?>
-
         </li>
       </ul>
     </div>
@@ -240,7 +227,7 @@
       <ul class="form_elements">
         <li>
           <label for="notify_subject"><?php echo Filters::noXSS(L('notifysubject')); ?></label>
-          <input id="notify_subject" class="text" name="notify_subject" type="text" size="40" value="<?php echo Filters::noXSS(Post::val('notify_subject', $proj->prefs['notify_subject'])); ?>" />
+          <input id="notify_subject" class="text" name="notify_subject" type="text" value="<?php echo Filters::noXSS(Post::val('notify_subject', $proj->prefs['notify_subject'])); ?>" />
           <br /><span class="note"><?php echo Filters::noXSS(L('notifysubjectinfo')); ?></span>
         </li>
 
@@ -263,7 +250,7 @@
 
         <li>
           <label for="notify_types"><?php echo Filters::noXSS(L('notifytypes')); ?></label>
-          <select id="notify_types" size="10" multiple="multiple" name="notify_types[]">
+          <select id="notify_types" size="17" multiple="multiple" name="notify_types[]">
           <?php echo tpl_options(array(0 => L('none'),
                               NOTIFY_TASK_OPENED     => L('taskopened'),
                               NOTIFY_TASK_CHANGED    => L('pm.taskchanged'),
@@ -282,7 +269,6 @@
                               NOTIFY_REV_DEP_REMOVED => L('revdepaddedremoved'),
                               NOTIFY_ADDED_ASSIGNEES => L('assigneeadded')),
                               Post::val('notify_types', Flyspray::int_explode(' ', $proj->prefs['notify_types']))); ?>
-
           </select>
         </li>
       </ul>
@@ -307,7 +293,6 @@
           <li>
               <label for="useeffort"><?php echo Filters::noXSS(L('useeffort')); ?></label>
               <?php echo tpl_checkbox('use_effort_tracking', Post::val('use_effort_tracking', $proj->prefs['use_effort_tracking']), 'useeffort'); ?>
-
           </li>
           <li>
               <label for="hours_per_manday"><?php echo Filters::noXSS(L('hourspermanday')); ?></label>
@@ -366,8 +351,7 @@
     <div class="tbuttons">
       <input type="hidden" name="action" value="pm.updateproject" />
       <input type="hidden" name="project_id" value="<?php echo Filters::noXSS($proj->id); ?>" />
-      <button type="submit"><?php echo Filters::noXSS(L('saveoptions')); ?></button>
-
+      <button type="submit" class="positive"><?php echo Filters::noXSS(L('saveoptions')); ?></button>
       <button type="reset"><?php echo Filters::noXSS(L('resetoptions')); ?></button>
     </div>
   </form>

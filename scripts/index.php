@@ -131,7 +131,7 @@ function tpl_list_heading($colname, $format = "<th%s>%s</th>")
 // tpl function that  draws a cell {{{
 
 function tpl_draw_cell($task, $colname, $format = "<td class='%s'>%s</td>") {
-	global $fs, $proj, $page, $user;
+	global $fs, $db, $proj, $page, $user;
 
 	$indexes = array (
             'id'         => 'task_id',
@@ -173,10 +173,21 @@ function tpl_draw_cell($task, $colname, $format = "<td class='%s'>%s</td>") {
             $value = tpl_tasklink($task, $task['task_id']);
             break;
         case 'summary':
-            $value = tpl_tasklink($task, utf8_substr($task['item_summary'], 0, 55));
-            if (utf8_strlen($task['item_summary']) > 55) {
-                $value .= '...';
-            }
+		$value = tpl_tasklink($task, utf8_substr($task['item_summary'], 0, 55));
+		if (utf8_strlen($task['item_summary']) > 55) {
+			$value .= '...';
+		}
+		# <i> instead of <span> in future for smaller size
+		# we need also some bytes for classes like <i class="t123">tagname</i>
+		if($task['tags']!=''){
+			$tags=explode(',', $task['tags']);
+			$tagids=explode(',', $task['tagids']);
+			$tgs='';
+			for($i=0;$i< count($tags); $i++){
+				$tgs.='<i class="t_'.$tagids[$i].'">'.$tags[$i].'</i>';
+			}
+                        $value.=$tgs;
+		}
             break;
 
         case 'tasktype':
@@ -215,11 +226,13 @@ function tpl_draw_cell($task, $colname, $format = "<td class='%s'>%s</td>") {
             break;
 
         case 'assignedto':
-            $value = htmlspecialchars($task[$indexes[$colname]], ENT_QUOTES, 'utf-8');
-            if ($task['num_assigned'] > 1) {
-                $value .= ', +' . ($task['num_assigned'] - 1);
-            }
-            break;
+		# group_concat-ed for mysql
+		$value = htmlspecialchars($task[$indexes[$colname]], ENT_QUOTES, 'utf-8');
+		# for DBs without group_concat()
+		if( ('mysql' != $db->dblink->dataProvider) && ($task['num_assigned'] > 1)) {
+			$value .= ', +' . ($task['num_assigned'] - 1);
+		}
+		break;
 
         case 'private':
             $value = $task[$indexes[$colname]] ? L('yes') : L('no');

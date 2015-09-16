@@ -97,13 +97,12 @@ class Project
 
         $join = 't.'.join(" = l.{$type}_id OR t.", $join)." = l.{$type}_id";
 
-        return "SELECT  l.*, count(t.task_id) AS used_in_tasks
-                  FROM  {list_{$type}} l
-             LEFT JOIN  {tasks}        t  ON ($join)
-                            AND t.project_id = l.project_id
-                 WHERE  l.project_id = ?
-              GROUP BY  $groupby
-              ORDER BY  list_position";
+        return "SELECT l.*, count(t.task_id) AS used_in_tasks
+                  FROM {list_{$type}} l
+             LEFT JOIN {tasks} t ON ($join) AND (l.project_id=0 OR t.project_id = l.project_id)
+                 WHERE l.project_id = ?
+              GROUP BY $groupby
+              ORDER BY list_position";
     }
 
     /**
@@ -289,18 +288,20 @@ class Project
         }
     }
 	
+	/* between FS0.9.9.7 to FS1.0alpha2 */
+	/*
 	function listTags($pm = false)
         {
                 global $db;
                 if ($pm) {
-                        $result= $db->Query('SELECT tag `name`, COUNT(*) `count`
+                        $result= $db->Query('SELECT tag AS tag_name, 1 AS list_position, 1 AS show_in_list, COUNT(*) AS used_in_tasks
                                 FROM {tags} tg
                                 JOIN {tasks} t ON t.task_id=tg.task_id
                                 WHERE t.project_id=?
                                 GROUP BY tag
                                 ORDER BY tag', array($this->id));
                 } else {
-                        $result= $db->Query('SELECT tag `name`, COUNT(*) `count`
+                        $result= $db->Query('SELECT tag AS tag_name, 1 AS list_position, 1 AS show_in_list, COUNT(*) AS used_in_tasks
                                 FROM {tags}
                                 GROUP BY tag
                                 ORDER BY tag');
@@ -312,6 +313,29 @@ class Project
                 }
                 return $tags;
         }
+	*/
+	/* rewrite of tags feature, FS1.0beta1 */ 
+	
+	function listTags($pm = false)
+	{
+		global $db;
+		if ($pm) {
+			$result= $db->Query('SELECT tg.*, COUNT(tt.task_id) AS used_in_tasks
+				FROM {list_tag} tg
+				LEFT JOIN {task_tag} tt ON tt.tag_id=tg.tag_id
+				LEFT JOIN {tasks} t ON t.task_id=tt.task_id
+				WHERE tg.project_id=?
+				GROUP BY tg.tag_id
+				ORDER BY tg.list_position', array($this->id));
+			$tags=array();
+			while ($row = $db->FetchRow($result)) {
+				$tags[]=$row;
+			}
+			return $tags;
+		} else {
+			return $db->cached_query('tag', $this->_list_sql('tag'), array($this->id));
+ 		}
+	}
     // }}}
 
     // This should really be moved to class Flyspray like some other ones too.

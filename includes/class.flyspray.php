@@ -366,6 +366,8 @@ class Flyspray
             $get_details += array('severity_name' => $get_details['task_severity']==0 ? '' : $fs->severities[$get_details['task_severity']]);
             $get_details += array('priority_name' => $get_details['task_priority']==0 ? '' : $fs->priorities[$get_details['task_priority']]);
         }
+	
+	$get_details['tags'] = Flyspray::getTags($task_id);
 
         $get_details['assigned_to'] = $get_details['assigned_to_name'] = array();
         if ($assignees = Flyspray::GetAssignees($task_id, true)) {
@@ -663,7 +665,7 @@ class Flyspray
             return 0;
         }
 
-        if( method != 'ldap' ){
+        if( $method != 'ldap' ){
         //encrypt the password with the method used in the db
         switch (strlen($auth_details['user_pass'])) {
             case 40:
@@ -926,6 +928,27 @@ class Flyspray
 
         return $changes;
     } // }}}
+    
+	// {{{
+        /**
+        * Get all tags of a task
+        * @access public static
+        * @return array
+        * @version 1.0
+        */
+        public static function getTags($task_id)
+        {
+                global $db;
+                # pre FS1.0beta
+                #$sql = $db->Query('SELECT * FROM {tags} WHERE task_id = ?', array($task_id));
+                # since FS1.0beta
+                $sql = $db->Query('SELECT tg.tag_name AS tag, tg.class FROM {task_tag} tt
+                        JOIN {list_tag} tg ON tg.tag_id=tt.tag_id 
+                        WHERE task_id = ?
+                        ORDER BY list_position', array($task_id));
+                return $db->FetchAllArray($sql);
+	} /// }}}
+    
     // {{{
     /**
      * Get a list of assignees for a task

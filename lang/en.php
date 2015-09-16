@@ -462,6 +462,7 @@ Regards,',
 'tasksummary'             => 'Task summary:',
 'newtaskadded'            => 'Your new task has been added.',
 'summaryanddetails'       => 'You need to fill in both the summary and the details.',
+'summaryrequired'         => 'You need to fill in a short task summary.',
 'goback'                  => 'Go back.',
 'messagefrom'             => 'This is a message from the Flyspray bug tracking system at ',
 'hasjustmodified'         => 'has just modified the following task.',
@@ -1036,5 +1037,6 @@ Tags are currently not managable and are not used for search or filtering. They 
 'novalues'                => 'no entries',
 'youhaveregistered'       => 'You have registered at Flyspray. Your details are as follows:',
 'youhaveregisterednotify' => 'Your registration at Flyspray has been accepted by Administrators.',
+'usedintasks'             => 'Usage',
 );
 ?>

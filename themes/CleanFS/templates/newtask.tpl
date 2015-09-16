@@ -33,10 +33,7 @@
   </script>
 <?php echo tpl_form(Filters::noXSS(CreateUrl('newtask', $proj->id, $supertask_id)), 'newtask', 'post', 'multipart/form-data', 'onsubmit="return checkContent()"'); ?>
   <input type="hidden" name="supertask_id" value="<?php echo Filters::noXSS($supertask_id); ?>" />
-  <div id="actionbar">
-    <button class="button positive main" accesskey="s" type="submit"><?php echo Filters::noXSS(L('addthistask')); ?></button>
-    <div class="clear"></div>
-  </div>
+  <div id="actionbar"><div class="clear"></div></div>
   <?php 
   # Grab fields wanted for this project so we can only show those we want
   $fields = explode( ' ', $proj->prefs['visible_fields'] );
@@ -196,18 +193,17 @@
 
       <div id="taskdetailsfull">
         <!--<h3 class="taskdesc"><?php echo Filters::noXSS(L('details')); ?></h3>-->
-        <h2 class="severity<?php echo Filters::noXSS(Req::val('task_severity', 2)); ?> summary" id="edit_summary">
-          <label for="itemsummary"><?php echo Filters::noXSS(L('summary')); ?></label>
-          <input id="itemsummary" class="text severity<?php echo Filters::noXSS(Req::val('task_severity', 2)); ?>" type="text" value="<?php echo Filters::noXSS(Req::val('item_summary')); ?>"
+        <label class="severity<?php echo Filters::noXSS(Req::val('task_severity', 2)); ?> summary" id="edit_summary" for="itemsummary"><?php echo Filters::noXSS(L('summary')); ?></label>
+        <input id="itemsummary" placeholder="<?php echo Filters::noXSS(L('summary')); ?>" title="<?php echo Filters::noXSS(L('tooltipshorttasktitle'));?>" type="text" value="<?php echo Filters::noXSS(Req::val('item_summary')); ?>"
             name="item_summary" maxlength="100" />
-        </h2>
 	<div id="edit_tags">
         <label for="tags" title="<?php echo Filters::noXSS(L('tagsinfo'));?>"><?php echo Filters::noXSS(L('tags')); ?>:</label>
         <input id="tags" title="<?php echo Filters::noXSS(L('tagsinfo'));?>" class="text" type="text"
-        value="<?php echo Filters::noXSS(Req::val('item_summary')); ?>" name="tags" maxlength="100" />
+        value="<?php echo Filters::noXSS(Req::val('tags')); ?>" name="tags" maxlength="100" />
 	</div>
         <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
         <div class="hide preview" id="preview"></div>
+        <button tabindex="9" type="button" onclick="showPreview('details', '<?php echo Filters::noJsXSS($baseurl); ?>', 'preview')"><?php echo Filters::noXSS(L('preview')); ?></button>
         <?php endif; ?>
         <?php echo TextFormatter::textarea('detailed_desc', 15, 70, array('id' => 'details'), Req::val('detailed_desc', $proj->prefs['default_task'])); ?>
 
@@ -221,11 +217,6 @@
           <?php endif; ?>
           <input type="hidden" name="action" value="newtask.newtask" />
           <input type="hidden" name="project_id" value="<?php echo Filters::noXSS($proj->id); ?>" />
-          <!--<button accesskey="s" type="submit"><?php echo Filters::noXSS(L('addthistask')); ?></button>-->
-          <?php if (defined('FLYSPRAY_HAS_PREVIEW')): ?>
-          <button tabindex="9" type="button" onclick="showPreview('details', '<?php echo Filters::noJsXSS($baseurl); ?>', 'preview')"><?php echo Filters::noXSS(L('preview')); ?></button>
-          <?php endif; ?>
-
           <?php if (!$user->isAnon()): ?>
           &nbsp;&nbsp;<input class="text" type="checkbox" id="notifyme" name="notifyme"
           value="1" checked="checked" />&nbsp;<label class="inline left" for="notifyme"><?php echo Filters::noXSS(L('notifyme')); ?></label>
@@ -272,6 +263,7 @@
 </button>
         <?php endif; ?>
 
+<button class="button positive" style="display:block;margin-top:20px" accesskey="s" type="submit"><?php echo Filters::noXSS(L('addthistask')); ?></button>
       </div>
 
     <div class="clear"></div>

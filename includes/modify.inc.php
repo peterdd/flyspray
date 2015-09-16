@@ -85,7 +85,8 @@ switch ($action = Req::val('action'))
     // ##################
     case 'newtask.newtask':
         if (!Post::val('item_summary') || trim(Post::val('item_summary')) == '') {//description not required
-            Flyspray::show_error(L('summaryanddetails'));
+            #Flyspray::show_error(L('summaryanddetails'));
+            Flyspray::show_error(L('summaryrequired'));
             break;
         }
 
@@ -110,7 +111,8 @@ switch ($action = Req::val('action'))
         // ##################
     case 'newmultitasks.newmultitasks':
         if(!isset($_POST['item_summary'])) {
-            Flyspray::show_error(L('summaryanddetails'));
+            #Flyspray::show_error(L('summaryanddetails'));
+            Flyspray::show_error(L('summaryrequired'));
             break;
         }
         $flag = true;
@@ -122,12 +124,17 @@ switch ($action = Req::val('action'))
         }
         $i = 0;
         foreach($_POST['detailed_desc'] as $detail) {
-            if($detail)
-                $_POST['detailed_desc'][$i] = "<p>" . $detail . "</p>";
+            if($detail){
+            	# only for ckeditor/html, not for dokuwiki (or other syntax plugins in future)
+            	if ($conf['general']['syntax_plugin'] != 'dokuwiki') {
+                  $_POST['detailed_desc'][$i] = "<p>" . $detail . "</p>";
+            	}
+            }
             $i++;
         }
         if(!$flag) {
-            Flyspray::show_error(L('summaryanddetails'));
+            #Flyspray::show_error(L('summaryanddetails'));
+            Flyspray::show_error(L('summaryrequired'));
             break;
         }
 
@@ -172,7 +179,8 @@ switch ($action = Req::val('action'))
         }
 
         if (!Post::val('item_summary')) {//description can be empty now
-            Flyspray::show_error(L('summaryanddetails'));
+            #Flyspray::show_error(L('summaryanddetails'));
+            Flyspray::show_error(L('summaryrequired'));
             break;
         }
 
@@ -209,11 +217,11 @@ switch ($action = Req::val('action'))
         $result = $db->Query('SELECT * from {tasks} WHERE task_id = ?', array($task['task_id']));
         $defaults = $db->fetchRow($result);
         
-        if (!Post::val('due_date')) {
+        if (!Post::has('due_date')) {
             $due_date = $defaults['due_date'];
         }
         
-        if (!Post::val('estimated_effort')) {
+        if (!Post::has('estimated_effort')) {
             $estimated_effort = $defaults['estimated_effort'];
         }
         
@@ -252,6 +260,37 @@ switch ($action = Req::val('action'))
             }
         }
 
+        // update tags
+        $tagList = explode(';', Post::val('tags'));  
+        $tagList = array_map('strip_tags', $tagList);
+        $tagList = array_map('trim', $tagList);
+        $tagList = array_unique($tagList); # avoid duplicates for inputs like: "tag1;tag1" or "tag1; tag1<p></p>"
+        $tags_changed = count(array_diff($task['tags'], $tagList)) + count(array_diff($tagList, $task['tags']));
+
+	if($tags_changed){
+		// Delete the current assigned tags for this task
+		$db->Query('DELETE FROM {task_tag} WHERE task_id = ?',  array($task['task_id']));
+		foreach ($tagList as $tag){
+			if ($tag == ''){
+				continue;
+			}
+
+			$res=$db->Query("SELECT tag_id FROM {list_tag} WHERE (project_id=0 OR project_id=?) AND tag_name LIKE ? ORDER BY project_id", array($proj->id,$tag) );
+			if($t=$db->FetchRow($res)){  
+				$tag_id=$t['tag_id'];
+			} else{
+				if( $proj->prefs['freetagging']==1){   
+					# add to taglist of the project
+					$db->Query("INSERT INTO {list_tag} (project_id,tag_name) VALUES (?,?)", array($proj->id,$tag));
+					$tag_id=$db->Insert_ID();
+				} else{
+					continue;
+				}
+			};
+			$db->Query("INSERT INTO {task_tag}(task_id,tag_id) VALUES(?,?)", array($task['task_id'], $tag_id) );
+		}
+	}
+
         // Get the details of the task we just updated
         // To generate the changed-task message
         $new_details_full = Flyspray::GetTaskDetails($task['task_id']);
@@ -261,9 +300,7 @@ switch ($action = Req::val('action'))
         $new_details = $db->FetchRow($result);
 
         foreach ($new_details as $key => $val) {
-            if (strstr($key, 'last_edited_') || $key == 'assigned_to'
-                || is_numeric($key))
-            {
+            if (strstr($key, 'last_edited_') || $key == 'assigned_to' || is_numeric($key)) {
                 continue;
             }
 
@@ -942,18 +979,22 @@ switch ($action = Req::val('action'))
             unset($_POST['spam_proof']);//if self register request admin to approve, disable spam_proof
         //if you think different, modify functions in class.user.php directing different regiser tpl
 
-    	if (Post::val('url_rewriting') == '1' && !$fs->prefs['url_rewriting']) {
-    		// First check if htaccess is turned on
-    		if (!array_key_exists('HTTP_HTACCESS_ENABLED', $_SERVER)) {
-    			Flyspray::show_error(L('enablehtaccess'));
-    			break;
-    		}
-    		// Make sure mod_rewrite is enabled
-    		else if (!array_key_exists('HTTP_MOD_REWRITE', $_SERVER)) {
-    			Flyspray::show_error(L('nomodrewrite'));
-    			break;
-    		}
-    	}
+	if (Post::val('url_rewriting') == '1' && !$fs->prefs['url_rewriting']) {
+		# Setenv can't be used to set the env variable in .htaccess, because apache module setenv is often disabled on hostings and brings server error 500.
+		# First check if htaccess is turned on
+		#if (!array_key_exists('HTTP_HTACCESS_ENABLED', $_SERVER)) {
+		#	Flyspray::show_error(L('enablehtaccess'));
+		#	break;
+		#}
+		
+		# Make sure mod_rewrite is enabled by checking a env var defined as HTTP_MOD_REWRITE in the .htaccess .
+		# It is possible to be converted to REDIRECT_HTTP_MOD_REWRITE . It's sound weired, but that's the case here.
+		if ( !array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && !array_key_exists('REDIRECT_HTTP_MOD_REWRITE' , $_SERVER) ) {
+			#print_r($_SERVER);die();
+			Flyspray::show_error(L('nomodrewrite'));
+			break;
+		}
+	}
 
         foreach ($settings as $setting) {
             $db->Query('UPDATE {prefs} SET pref_value = ? WHERE pref_name = ?',
@@ -1023,8 +1064,9 @@ switch ($action = Req::val('action'))
         Post::num('disp_intro')
     ));
 
-        $sql = $db->Query('SELECT project_id FROM {projects} ORDER BY project_id DESC', false, 1);
-        $pid = $db->fetchOne($sql);
+        // $sql = $db->Query('SELECT project_id FROM {projects} ORDER BY project_id DESC', false, 1);
+        // $pid = $db->fetchOne($sql);
+        $pid = $db->Insert_ID();
 
         $cols = array( 'manage_project', 'view_tasks', 'open_new_tasks',
                 'modify_own_tasks', 'modify_all_tasks', 'view_comments',
@@ -1100,7 +1142,7 @@ switch ($action = Req::val('action'))
                 'feed_description', 'feed_img_url','default_due_version','use_effort_tracking',
                 'pages_intro_msg', 'estimated_effort_format', 'current_effort_done_format', 'default_order_by', 'default_order_by_dir');
         $args = array_map('Post_to0', $cols);
-        $cols = array_merge($cols, $ints = array('project_is_active', 'others_view', 'others_viewroadmap', 'anon_open', 'comment_closed', 'auto_assign'));
+        $cols = array_merge($cols, $ints = array('project_is_active', 'others_view', 'others_viewroadmap', 'anon_open', 'comment_closed', 'auto_assign', 'freetagging'));
         $args = array_merge($args, array_map(array('Post', 'num'), $ints));
         $cols[] = 'notify_types';
         $args[] = implode(' ', (array) Post::val('notify_types'));

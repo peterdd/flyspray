@@ -355,7 +355,7 @@
         endforeach; ?>
 <td id="desc_<?php echo $task_details['task_id']; ?>" class="descbox box">
 <b><?php echo L('taskdescription'); ?></b>
-<?php echo $task_details['detailed_desc'] ? TextFormatter::render($task_details['detailed_desc'], 'task', $task_details['task_id']) : '<p>'.L('notaskdescription').'</p>'; ?>
+<?php echo $task_details['detailed_desc'] ? TextFormatter::render($task_details['detailed_desc'], 'task', $task_details['task_id'], $task_details['desccache']) : '<p>'.L('notaskdescription').'</p>'; ?>
 </td>
     </tr>
 <?php endforeach; ?>
@@ -581,7 +581,7 @@
     <fieldset>
 	<legend><b><?php echo L('closeselectedtasks'); ?></b></legend>
             <div>
-                <select class="adminlist" name="resolution_reason" onmouseup="Event.stop(event);">
+                <select class="adminlist" name="resolution_reason" onmouseup="event.stopPropagation();">
                     <option value="0"><?php echo Filters::noXSS(L('selectareason')); ?></option>
                     <?php echo tpl_options($proj->listResolutions(), Req::val('resolution_reason')); ?>
                 </select>

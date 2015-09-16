@@ -1,18 +1,8 @@
 <p><?php echo Filters::noXSS(L('listnote')); ?></p>
-<?php if (count($rows)): ?>
-<div id="controlBox">
-    <div class="grip"></div>
-    <div class="inner">
-        <a href="#" onclick="TableControl.up('listTable'); return false;"><img src="<?php echo Filters::noXSS($this->themeUrl()); ?>/up.png" alt="Up" /></a>
-        <a href="#" onclick="TableControl.down('listTable'); return false;"><img src="<?php echo Filters::noXSS($this->themeUrl()); ?>/down.png" alt="Down" /></a>
-    </div>
-</div>
-<?php endif; ?>
 <?php if ($do=='pm'):
 # show systemwide settings for this list on project setting page too ..
 ?>
 <h3><?php echo Filters::noXSS(L('systemvalues'));
-# TODO: do we have still a matching translation string name we can use instead inventing a new one?
 # TODO: should be h2 tag, h1 tag for page type title, and project/flyspray title not a h1-tag in the header.
 ?></h3>
 <table class="list" id="idtablesys">
@@ -22,6 +12,7 @@
 <col class="cshow"></col>
 <?php if ($list_type == 'version'): ?><col class="ctense"></col><?php endif; ?>
 <col class="cdelete"></col>
+<col class="cusage"></col>
 </colgroup>
 <thead>
 <tr>
@@ -30,6 +21,7 @@
     <th><?php echo Filters::noXSS(L('show')); ?></th>
     <?php if ($list_type == 'version'): ?><th><?php echo Filters::noXSS(L('tense')); ?></th><?php endif; ?>
     <th>&nbsp;</th>
+    <th><?php echo Filters::noXSS(L('usedintasks')); ?></th>
 </tr>
 </thead>
 <tbody>
@@ -45,21 +37,28 @@ $syscountlines++;
     <td title="<?php echo Filters::noXSS(L('showtip')); ?>"><?php echo $row['show_in_list']; ?></td>
     <?php if ($list_type == 'version'): ?><td title="<?php echo Filters::noXSS(L('listtensetip')); ?>"><?php echo $row[$list_type.'_tense']; ?></td><?php endif; ?>
     <td>&nbsp;</td>
+    <td><?php echo $row['used_in_tasks'] >0 ? $row['used_in_tasks']:''; ?></td>
 </tr>
 <?php endforeach; ?>
 <?php else: ?>
-<tr><td colspan="<?php echo $list_type=='version' ? 5 : 4; ?>"><?php echo Filters::noXSS(L('novalues'));
-# TODO: do we have still a matching translation string name we can use instead inventing a new one?
-?></td></tr>
+<tr><td colspan="<?php echo $list_type=='version' ? 5 : 4; ?>"><?php echo Filters::noXSS(L('novalues')); ?></td></tr>
 <?php endif; ?>
 </tbody>
 </table>
 <?php endif; ?>
-<?php echo tpl_form(Filters::noXSS(CreateURL($do, $list_type, $proj->id))); ?>
 <h3><?php echo $do=='pm' ? Filters::noXSS(L('projectvalues')) : Filters::noXSS(L('systemvalues'));
-# TODO: do we have still a matching translation string name we can use instead inventing a new one?
 # TODO: should be h2 tag, h1 tag for page type title, and project/flyspray title not a h1-tag in the header.
 ?></h3>
+<?php if (count($rows)): ?>
+<div id="controlBox">
+    <div class="grip"></div>
+    <div class="inner">
+        <a href="#" onclick="TableControl.up('listTable'); return false;"><img src="<?php echo Filters::noXSS($this->themeUrl()); ?>/up.png" alt="Up" /></a>
+        <a href="#" onclick="TableControl.down('listTable'); return false;"><img src="<?php echo Filters::noXSS($this->themeUrl()); ?>/down.png" alt="Down" /></a>
+    </div>
+</div>
+<?php endif; ?>
+<?php echo tpl_form(Filters::noXSS(CreateURL($do, $list_type, $proj->id))); ?>
 <table class="list" id="listTable">
 <colgroup>
     <col class="cname"></col>
@@ -67,6 +66,7 @@ $syscountlines++;
     <col class="cshow"></col>
     <?php if ($list_type == 'version'): ?><col class="ctense"></col><?php endif; ?>
     <col class="cdelete"></col>
+    <col class="cusage"></col>
 </colgroup>
 <thead>
     <tr>
@@ -75,6 +75,7 @@ $syscountlines++;
        <th><?php echo Filters::noXSS(L('show')); ?></th>
        <?php if ($list_type == 'version'): ?><th><?php echo Filters::noXSS(L('tense')); ?></th><?php endif; ?>
        <th><?php echo Filters::noXSS(L('delete')); ?></th>
+       <th><?php echo Filters::noXSS(L('usedintasks')); ?></th>
      </tr>
    </thead>
    <tbody>
@@ -109,13 +110,15 @@ $syscountlines++;
         <?php endif; ?>
         name="delete[<?php echo Filters::noXSS($row[$list_type.'_id']); ?>]" value="1" />
       </td>
+      <td><?php echo $row['used_in_tasks'] >0 ? $row['used_in_tasks']:''; ?></td>
     </tr>
     <?php endforeach; ?>
     </tbody>
     <?php if(count($rows)): ?>
+    <tfoot>
     <tr>
       <td colspan="3"></td>
-      <td class="buttons">
+      <td colspan="2" class="buttons">
         <?php if ($list_type == 'version'): ?>
         <input type="hidden" name="action" value="update_version_list" />
         <?php else: ?>
@@ -126,6 +129,7 @@ $syscountlines++;
         <button type="submit"><?php echo Filters::noXSS(L('update')); ?></button>
       </td>
     </tr>
+    </tfoot>
     <?php endif; ?>
   </table>
   <?php if (count($rows)): ?>
@@ -165,7 +169,7 @@ $syscountlines++;
         <input type="hidden" name="project_id" value="<?php echo Filters::noXSS($proj->id); ?>" />
         <?php endif; ?>
         <input type="hidden" name="area" value="<?php echo Filters::noXSS(Req::val('area')); ?>" />
-        <input type="hidden" name="do" value="<?php echo Filters::noXSS(Req::val('do')); ?>" />
+        <input type="hidden" name="do" value="<?php echo Filters::noXSS($do); ?>" />
         <input id="listnamenew" placeholder="<?php echo Filters::noXSS(L('name')); ?>" class="text" type="text" maxlength="40" value="<?php echo Filters::noXSS(Req::val('list_name')); ?>" name="list_name" autofocus />
       </td>
       <td>
@@ -184,7 +188,7 @@ $syscountlines++;
       <?php endif; ?>
       <td class="buttons">
         <input type="hidden" name="project" value="<?php echo Filters::noXSS($proj->id); ?>" />
-        <button type="submit"><?php echo Filters::noXSS(L('addnew')); ?></button>
+        <button type="submit" class="positive"><?php echo Filters::noXSS(L('addnew')); ?></button>
       </td>
     </tr>
 </tbody>

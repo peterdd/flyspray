@@ -315,18 +315,12 @@ abstract class Backend
 
         $time =  !is_numeric($time) ? time() : $time ;
 
-        $db->Query('INSERT INTO  {comments}
-                                 (task_id, date_added, last_edited_time, user_id, comment_text)
-                         VALUES  ( ?, ?, ?, ?, ? )',
+        $db->Query('INSERT INTO {comments}
+                                (task_id, date_added, last_edited_time, user_id, comment_text)
+                         VALUES ( ?, ?, ?, ?, ? )',
                     array($task['task_id'], $time, $time, $user->id, $comment_text));
-
-        $result = $db->Query('SELECT  comment_id
-                                FROM  {comments}
-                               WHERE  task_id = ?
-                            ORDER BY  comment_id DESC',
-                            array($task['task_id']), 1);
-        $cid = $db->FetchOne($result);
-
+        $cid = $db->Insert_ID();
+	Backend::upload_links($task['task_id'], $cid);
         Flyspray::logEvent($task['task_id'], 4, $cid);
 
         if (Backend::upload_files($task['task_id'], $cid)) {
@@ -334,6 +328,7 @@ abstract class Backend
         } else {
             $notify->Create(NOTIFY_COMMENT_ADDED, $task['task_id'], null, null, NOTIFY_BOTH, $proj->prefs['lang_code']);
         }
+	
 
         return true;
     }
@@ -405,12 +400,16 @@ abstract class Backend
                         $user->id, time()));
 
             // Fetch the attachment id for the history log
+            /*
             $result = $db->Query('SELECT  attachment_id
                                     FROM  {attachments}
                                    WHERE  task_id = ?
                                 ORDER BY  attachment_id DESC',
                     array($task_id), 1);
             Flyspray::logEvent($task_id, 7, $db->fetchOne($result), $_FILES[$source]['name'][$key]);
+            */
+            $attid = $db->Insert_ID();
+            Flyspray::logEvent($task_id, 7, $attid, $_FILES[$source]['name'][$key]);
         }
 
         return $res;
@@ -1071,36 +1070,61 @@ abstract class Backend
             $sql_values[] = $value;
         }
 
-
+	/*
+         * TODO: At least with PostgreSQL, this has caused the sequence to be
+         * out of sync with reality. Must be fixed in upgrade process. Check
+         * what's the situation with MySQL. (It's fine, it updates the value even
+         * if the column was manually adjusted. Remove this whole block later.)
         $result = $db->Query('SELECT  MAX(task_id)+1
                                 FROM  {tasks}');
         $task_id = $db->FetchOne($result);
         $task_id = $task_id ? $task_id : 1;
-
+	*/
         //now, $task_id is always the first element of $sql_values
-        array_unshift($sql_keys, 'task_id');
-        array_unshift($sql_values, $task_id);
+        #array_unshift($sql_keys, 'task_id');
+        #array_unshift($sql_values, $task_id);
 
         $sql_keys_string = join(', ', $sql_keys);
         $sql_placeholder = $db->fill_placeholders($sql_values);
 
-        $result = $db->Query("INSERT INTO  {tasks}
-                                 ($sql_keys_string)
-                         VALUES  ($sql_placeholder)", $sql_values);
+        $result = $db->Query("INSERT INTO {tasks}
+                                ($sql_keys_string)
+                         VALUES ($sql_placeholder)", $sql_values);
+	$task_id=$db->Insert_ID();
+	
+	Backend::upload_links($task_id);
+	
+	// create tags
+	if (isset($args['tags'])) {
+		$tagList = explode(';', $args['tags']);
+		$tagList = array_map('strip_tags', $tagList);
+		$tagList = array_map('trim', $tagList);
+		$tagList = array_unique($tagList); # avoid duplicates for inputs like: "tag1;tag1" or "tag1; tag1<p></p>"
+		foreach ($tagList as $tag){
+			if ($tag == ''){
+				continue;
+			}
+			
+			# old tag feature
+			#$result2 = $db->Query("INSERT INTO {tags} (task_id, tag) VALUES (?,?)",array($task_id,$tag));
+			
+			# new tag feature. let's do it in 2 steps, it is getting too complicated to make it cross database compatible, drawback is possible (rare) race condition (use transaction?)
+			$res=$db->Query("SELECT tag_id FROM {list_tag} WHERE (project_id=0 OR project_id=?) AND tag_name LIKE ? ORDER BY project_id", array($proj->id,$tag) );
+			if($t=$db->FetchRow($res)){   
+				$tag_id=$t['tag_id'];
+			} else{ 
+				if( $proj->prefs['freetagging']==1){
+					# add to taglist of the project
+					$db->Query("INSERT INTO {list_tag} (project_id,tag_name) VALUES (?,?)", array($proj->id,$tag));
+					$tag_id=$db->Insert_ID();
+				} else{
+					continue;
+				}
+			};
+			$db->Query("INSERT INTO {task_tag}(task_id,tag_id) VALUES(?,?)", array($task_id, $tag_id) );
+		}
+	}
 
-	/////////////////////////////////////Add tags///////////////////////////////////////
-    if (isset($args['tags'])) {
-    	$tagList = explode(';', $args['tags']);
-    	foreach ($tagList as $tag)
-    	{
-    		if ($tag == '')
-    			continue;
-    		$result2 = $db->Query("INSERT INTO {tags} (task_id, tag)
-		                           VALUES (?,?)",array($task_id,$tag));
-    	}
-    }
-
-        ////////////////////////////////////////////////////////////////////////////////////
         // Log the assignments and send notifications to the assignees
         if (isset($args['rassigned_to']) && is_array($args['rassigned_to']))
         {
@@ -1301,6 +1325,7 @@ LEFT JOIN ({groups} pg
 	// Keep this always, could also used for showing assigned users for a task.
 	// Keeps the overall logic somewhat simpler.
 	$from .= ' LEFT JOIN {assigned} ass ON t.task_id = ass.task_id';
+	$from .= ' LEFT JOIN {task_tag} tt ON t.task_id = tt.task_id';
         $cfrom = $from;
         
         // Seems resution name really is needed...
@@ -1406,21 +1431,58 @@ LEFT JOIN {list_os} los ON t.operating_system = los.os_id ';
             $select .= ' (SELECT SUM(ef.effort) FROM {effort} ef WHERE t.task_id = ef.task_id) AS effort, ';
         }
 
-        if (array_get($args, 'dev') || in_array('assignedto', $visible)) {
-            $select .= ' MIN(u.real_name) AS assigned_to_name, ';
-            $select .= ' (SELECT COUNT(assc.user_id) FROM {assigned} assc WHERE assc.task_id = t.task_id)  AS num_assigned, ';
-            // assigned table is now always included in join
-            $from .= '
--- LEFT JOIN {assigned} ass ON t.task_id = ass.task_id
+	if (array_get($args, 'dev') || in_array('assignedto', $visible)) {
+		# not every db system has this feature out of box
+		if('mysql' == $db->dblink->dataProvider){
+			#$select .= ' GROUP_CONCAT(u.real_name) AS assigned_to_name, ';
+			# without distinct i see multiple times each assignee
+			# maybe performance penalty due distinct?, solve by better groupby construction?
+			$select .= ' GROUP_CONCAT(DISTINCT u.real_name) AS assigned_to_name, ';
+			# maybe later for building links to users
+			#$select .= ' GROUP_CONCAT(DISTINCT u.real_name ORDER BY u.user_id) AS assigned_to_name, ';
+			#$select .= ' GROUP_CONCAT(DISTINCT u.user_id ORDER BY u.user_id) AS assignedids, ';
+		}else{
+			$select .= ' MIN(u.real_name) AS assigned_to_name, ';
+			$select .= ' (SELECT COUNT(assc.user_id) FROM {assigned} assc WHERE assc.task_id = t.task_id)  AS num_assigned, ';
+		}
+		// assigned table is now always included in join
+		$from .= '
 LEFT JOIN {users} u ON ass.user_id = u.user_id ';
-            $groupby .= 'ass.task_id, ';
-            if (array_get($args, 'dev')) {
-                $cfrom .= '
--- LEFT JOIN {assigned} ass ON t.task_id = ass.task_id
+		$groupby .= 'ass.task_id, ';
+		if (array_get($args, 'dev')) {
+			$cfrom .= '
 LEFT JOIN {users} u ON ass.user_id = u.user_id ';
-		$cgroupbyarr[] = 't.task_id';
-                $cgroupbyarr[] = 'ass.task_id';
-            }
+			$cgroupbyarr[] = 't.task_id';
+			$cgroupbyarr[] = 'ass.task_id';
+		}
+	}
+        
+	# not every db system has this feature out of box
+	if('mysql' == $db->dblink->dataProvider){
+		# without distinct i see multiple times each tag (when task has several assignees too)
+		$select .= ' GROUP_CONCAT(DISTINCT tg.tag_name ORDER BY tg.list_position) AS tags, ';
+		$select .= ' GROUP_CONCAT(DISTINCT tg.tag_id ORDER BY tg.list_position) AS tagids, ';
+	}else{
+		$select .= ' MIN(tg.tag_name) AS tags, ';
+		$select .= ' (SELECT COUNT(tt.tag_id) FROM {task_tag} tt WHERE tt.task_id = t.task_id)  AS tagnum, ';
+	}
+	// task_tag join table is now always included in join
+	$from .= '
+LEFT JOIN {list_tag} tg ON tt.tag_id = tg.tag_id ';
+	$groupby .= 'tt.task_id, ';
+	$cfrom .= '
+LEFT JOIN {list_tag} tg ON tt.tag_id = tg.tag_id ';
+	$cgroupbyarr[] = 't.task_id';
+	$cgroupbyarr[] = 'tt.task_id';
+
+
+	# use preparsed task description cache for dokuwiki when possible
+	if($conf['general']['syntax_plugin']=='dokuwiki' && FLYSPRAY_USE_CACHE==true){
+		$select.=' cache.content desccache, ';
+		$from.='
+LEFT JOIN {cache} cache ON t.task_id=cache.topic AND cache.type="task" ';
+	} else {
+            $select .= 'NULL AS desccache, ';
         }
 
         if (array_get($args, 'only_primary')) {
@@ -1694,8 +1756,15 @@ LEFT JOIN {users} u ON ass.user_id = u.user_id ';
         }
 
 	if ($user->isAnon()) {
-            $where[] = 't.mark_private = 0 AND p.others_view = 1 AND t.is_closed = 0 ';
-        }
+		$where[] = 't.mark_private = 0 AND p.others_view = 1';
+		if(array_key_exists('status', $args)){
+			if (in_array('closed', $args['status']) && !in_array('open', $args['status'])) {
+				$where[] = 't.is_closed = 1';
+			} elseif (in_array('open', $args['status']) && !in_array('closed', $args['status'])) {
+				$where[] = 't.is_closed = 0';
+			}
+		}
+	}
 
         $where = (count($where)) ? 'WHERE ' . join(' AND ', $where) : '';
 

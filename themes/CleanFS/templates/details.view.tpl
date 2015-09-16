@@ -28,7 +28,7 @@
         <?php echo tpl_form(Filters::noXSS(CreateURL('details', $task_details['task_id'])),null,null,null,'id="formclosetask"'); ?>
         <input type="hidden" name="action" value="details.close"/>
         <input type="hidden" name="task_id" value="<?php echo Filters::noXSS($task_details['task_id']); ?>"/>
-        <select class="adminlist" name="resolution_reason" onmouseup="Event.stop(event);">
+        <select class="adminlist" name="resolution_reason" onmouseup="event.stopPropagation();">
         <option value="0"><?php echo Filters::noXSS(L('selectareason')); ?></option>
         <?php echo tpl_options($proj->listResolutions(), Req::val('resolution_reason')); ?>
         </select>
@@ -602,7 +602,7 @@ function quick_edit(elem, id)
 					</div>
 				<?php endif; ?>
 				<?php if ($user->can_vote($task_details) > 0): ?>
-					<?php echo tpl_form(Filters::noXSS(CreateURL('details', $task_details['task_id']))); ?>
+					<?php echo tpl_form(Filters::noXSS(CreateURL('details', $task_details['task_id'])),null,null,null,'style="display:inline"'); ?>
 						<input type="hidden" name="action" value="details.addvote" />
 						<input type="hidden" name="task_id" value="<?php echo Filters::noXSS($task_details['task_id']); ?>" />
 						<button class="fakelinkbutton" type="submit" title="<?php echo Filters::noXSS(L('addvote')); ?>">+1</button>
@@ -697,8 +697,7 @@ function quick_edit(elem, id)
         <?php if(!count($deps)==0): ?>
         <?php $projects = $fs->listProjects(); ?>
         <table id="dependency_table" class="table" width="100%">
-            <!-- <caption>This task depends on the following tasks.</caption> -->
-            <caption><? echo (count($deps)==1) ? eL('taskdependsontask') : eL('taskdependsontasks'); ?></caption>
+            <caption><?php echo (count($deps)==1) ? eL('taskdependsontask') : eL('taskdependsontasks'); ?></caption>
             <thead>
             <tr>
                 <th><?php echo Filters::noXSS(L('id')); ?></th>
@@ -755,7 +754,6 @@ function quick_edit(elem, id)
         <?php if(!count($blocks)==0): ?>
         <?php $projects = $fs->listProjects(); ?>
         <table id="blocking_table" class="table" width="100%">
-            <!-- <caption>This task prevents closing the following tasks.</caption> -->
             <caption><?php echo (count($blocks)==1) ? eL('taskblock') : eL('taskblocks'); ?></caption>
             <thead>
             <tr>
