@@ -39,8 +39,8 @@ if(ini_get('safe_mode') == 1){
 		<h2><?php echo L('needcomposer'); ?></h2>
 <?php
 $missing=array();
-if (!extension_loaded('phar'){ $missing[]='phar'; }
-if (!extension_loaded('openssl'){ $missing[]='openssl'; }
+if (!extension_loaded('phar')) { $missing[]='phar'; }
+if (!extension_loaded('openssl')) { $missing[]='openssl'; }
 if (count($missing >0)) : ?>
         <h1 class="error"><?php echo implode(' and ', $missing); ?> extension needed. Please install it for your operating system and restart the webserver.</h1>
 <?php else: ?>
