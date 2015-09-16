@@ -41,7 +41,7 @@ if(ini_get('safe_mode') == 1){
 $missing=array();
 if (!extension_loaded('phar')) { $missing[]='phar'; }
 if (!extension_loaded('openssl')) { $missing[]='openssl'; }
-if (count($missing >0)) : ?>
+if (count($missing) >0) : ?>
         <h1 class="error"><?php echo implode(' and ', $missing); ?> extension needed. Please install it for your operating system and restart the webserver.</h1>
 <?php else: ?>
 		<a href="<?php echo $composerit; ?>" class="button" style="margin:auto;max-width:300px;text-align:center;display:block;font-size:2em;"><?php echo L('installcomposer'); ?></a>
