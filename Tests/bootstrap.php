@@ -7,6 +7,6 @@ require $file;
 }
 }
 spl_autoload_register('loader');
-require_once 'includes/class.database.php';
+#require_once 'includes/class.database.php';
 
 ?>
