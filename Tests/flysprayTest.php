@@ -1,17 +1,20 @@
 <?php
 class FlysprayTest extends PHPUnit_Framework_TestCase{
-  /**
-    * @var PDO
-  */
-  private $pdo;
-  # just taken as first test from github project travis-ci-examples/php
+  private $db;
+
   public function setUp(){
-    $this->pdo = new PDO($GLOBALS['db_dsn'], $GLOBALS['db_username'], $GLOBALS['db_password']);
-    $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $this->pdo->query("CREATE TABLE hello (what VARCHAR(50) NOT NULL)");
+    if($_ENV['DB']=='mysql'){
+      $this->db = new Database('localhost', 'root', '', 'flyspray', 'mysqli', 'flyspray_');
+    } elseif($_ENV['DB']=='pgsql'){
+      $this->db->Query("CREATE TABLE {projects} (what VARCHAR(50) NOT NULL)");
+    } else{
+      # unsupported
+      die('not test for this '.$_ENV['DB']);
+    }
   }
+  
   public function tearDown(){
-    $this->pdo->query("DROP TABLE hello");
+    $this->db->Query("DROP TABLE {hello}");
   }
   
   public function testHelloWorld(){
