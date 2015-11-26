@@ -11,6 +11,12 @@ class FlysprayTest extends PHPUnit_Framework_TestCase{
     $this->db->Query("DROP TABLE {hello}");
   }
   
+  public function testdbTableinfo(){
+    # just testing/experimenting for travis-ci
+    $this->db->Query('SHOW cREATE TABLE {project}'); # should pass on mysql, fail on postgres
+    
+    $this->assertEquals('mysql',$GLOBALS['dbtype']); # test if we come this far mysql/mysqli
+  }
   public function testHelloWorld(){
     $helloWorld = 'Hello World';
     $this->assertEquals('Hello World', $helloWorld);
