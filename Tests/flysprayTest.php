@@ -3,13 +3,13 @@ class FlysprayTest extends PHPUnit_Framework_TestCase{
   public $db;
 
   public function setUp(){
-    $this->db = new Database;
-    $this->db->dbOpen($GLOBALS['dbhost'], $GLOBALS['dbuser'], $GLOBALS['dbpass'], $GLOBALS['dbname'], $GLOBALS['dbtype'], $GLOBALS['dbprefix']);
-    $this->db->Query("CREATE TABLE {projects} (what VARCHAR(50) NOT NULL)");
+    #this->db = new Database;
+    #this->db->dbOpen($GLOBALS['dbhost'], $GLOBALS['dbuser'], $GLOBALS['dbpass'], $GLOBALS['dbname'], $GLOBALS['dbtype'], $GLOBALS['dbprefix']);
+    #this->db->Query("CREATE TABLE {projects} (what VARCHAR(50) NOT NULL)");
   }
   
   public function tearDown(){
-    $this->db->Query("DROP TABLE {hello}");
+    #this->db->Query("DROP TABLE {hello}");
   }
   public function testException(){
     
