@@ -1,6 +1,6 @@
 <?php
 class FlysprayTest extends PHPUnit_Framework_TestCase{
-  public $db;
+  private $db;
 
   public function setUp(){
     #this->db = new Database;
@@ -11,10 +11,7 @@ class FlysprayTest extends PHPUnit_Framework_TestCase{
   public function tearDown(){
     #this->db->Query("DROP TABLE {hello}");
   }
-  public function testException(){
-    
-  }
-  
+
   public function testFail(){
     $this->assertEquals(1,0);
   }
@@ -24,6 +21,7 @@ class FlysprayTest extends PHPUnit_Framework_TestCase{
     
     this->assertEquals('mysql',$GLOBALS['dbtype']); # test if we come this far mysql/mysqli
   }
+  
   public function testHelloWorld(){
     $helloWorld = 'Hello World';
     $this->assertEquals('Hello World', $helloWorld);
