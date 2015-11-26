@@ -7,4 +7,6 @@ require $file;
 }
 }
 spl_autoload_register('loader');
+require_once dirname(__FILE__) . '/includes/class.flyspray.php';
+
 ?>
