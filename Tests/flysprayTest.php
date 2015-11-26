@@ -10,8 +10,14 @@ class FlysprayTest extends PHPUnit_Framework_TestCase{
   public function tearDown(){
     $this->db->Query("DROP TABLE {hello}");
   }
+  public function testException(){
+    
+  }
   
-  public function testdbTableinfo(){
+  public function testFail(){
+    $this->assertEquals(1,0);
+  }
+  public function testDbTableInfo(){
     # just testing/experimenting for travis-ci
     $this->db->Query('SHOW cREATE TABLE {project}'); # should pass on mysql, fail on postgres
     
