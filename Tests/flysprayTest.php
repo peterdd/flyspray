@@ -1,16 +1,9 @@
 <?php
 class FlysprayTest extends PHPUnit_Framework_TestCase{
-  private $db;
+  public $db;
 
   public function setUp(){
-    if($_ENV['DB']=='mysql'){
-      $this->db = new Database('localhost', 'root', '', 'flyspray', 'mysqli', 'flyspray_');
-    } elseif($_ENV['DB']=='pgsql'){
-      $this->db = new Database('localhost', 'postgres', '', 'flyspray', 'pgsql', 'flyspray_');
-    } else{
-      # unsupported
-      die('not test for this '.$_ENV['DB']);
-    }
+    $this->db = new Database(GLOBALS['dbhost'], $GLOBALS['dbuser'], $GLOBALS['dbpass'], $GLOBALS['dbname'], $GLOBALS['dbtype'], $GLOBALS['dbprefix']);
     $this->db->Query("CREATE TABLE {projects} (what VARCHAR(50) NOT NULL)");
   }
   
